@@ -1,0 +1,12 @@
+language: generic
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker pull greenaddress/recovery@sha256:0b6740458301e62a552850b9f641fe98d497ab03ac89f8eaa1c09a8aa80ef514
+
+script:
+  - docker run -v $PWD:/recovery greenaddress/recovery /bin/sh -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
+  - docker run -v $PWD:/recovery greenaddress/recovery /bin/sh -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"

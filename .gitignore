@@ -1,0 +1,13 @@
+*.pyc
+greenaddress_recovery.egg-info
+build
+dist
+.cache
+.eggs
+venv
+deps_cache
+.coverage
+htmlcov
+.tox
+*.csv
+*.swp
