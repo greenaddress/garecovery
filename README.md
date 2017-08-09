@@ -1,5 +1,7 @@
 Recover funds from GreenAddress wallets
 
+Build status: [![Build Status](https://travis-ci.org/greenaddress/garecovery.png?branch=master)](https://travis-ci.org/greenaddress/garecovery)
+
 Please also see the GreenAddress FAQ: https://greenaddress.it/en/faq.html
 
 # Install
