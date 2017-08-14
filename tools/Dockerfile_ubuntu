@@ -1,0 +1,4 @@
+FROM ubuntu:16.04
+COPY 16.04_deps.sh /deps.sh
+RUN /deps.sh && rm /deps.sh
+VOLUME /recovery

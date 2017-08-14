@@ -1,8 +1,6 @@
 #! /usr/bin/env bash
 set -e
 
-sed -i 's/deb.debian.org/httpredir.debian.org/g' /etc/apt/sources.list
-
 apt-get update -qq
 apt-get upgrade -yqq
 apt-get install python{,3}-pip python{,3}-dev build-essential python{,3}-virtualenv -yqq

@@ -34,6 +34,38 @@ test_recoverycli_py3:
       - htmlcov
       - dist
 
+test_recoverycli_py2_u16_04:
+  image: greenaddress/recovery_ubuntu16.04@sha256:ac3017a1ca59cdb13f57491034973b3848636e6d0c44bdf3af4f13d39aed92b4
+  tags:
+    - ga
+  script:
+    - cd $CI_PROJECT_DIR
+    - virtualenv -p python2 venv
+    - source venv/bin/activate
+    - pip install --upgrade setuptools pip
+    - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
+    - ./tools/dobuild.sh
+  artifacts:
+    paths:
+      - htmlcov
+      - dist
+
+test_recoverycli_py3_u16_04:
+  image: greenaddress/recovery_ubuntu16.04@sha256:ac3017a1ca59cdb13f57491034973b3848636e6d0c44bdf3af4f13d39aed92b4
+  tags:
+    - ga
+  script:
+    - cd $CI_PROJECT_DIR
+    - virtualenv -p python3 venv
+    - source venv/bin/activate
+    - pip install --upgrade setuptools pip
+    - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
+    - ./tools/dobuild.sh
+  artifacts:
+    paths:
+      - htmlcov
+      - dist
+
 pages:
     stage: deploy
     dependencies:
