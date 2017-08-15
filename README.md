@@ -5,7 +5,8 @@ Build status: [![Build Status](https://travis-ci.org/greenaddress/garecovery.png
 For more information on the GreenAddress service, subaccount types and
 recovery, please read the [GreenAddress FAQ](https://greenaddress.it/en/faq)
 
-# Dependencies for Ubuntu & Debian (remove all '{,3}' if you want to use just python2)
+# Dependencies for Ubuntu & Debian
+Remove all '{,3}' if you want to use just python2
 ```
 $ sudo apt-get update -qq
 $ sudo apt-get install python{,3}-pip python{,3}-dev build-essential python{,3}-virtualenv -yqq
