@@ -13,9 +13,9 @@ from . import ga_xpub
 
 class TwoOfTwo:
 
-    def __init__(self, mnemonic, seed, nlocktime_filename):
-        logging.info('Reading nlocktime transactions from {}'.format(nlocktime_filename))
-        self.compressed_zip = open(nlocktime_filename, "rb").read()
+    def __init__(self, mnemonic, seed, nlocktime_file):
+        logging.info('Reading nlocktime transactions from {}'.format(nlocktime_file))
+        self.compressed_zip = open(nlocktime_file, "rb").read()
 
         self.mnemonic = mnemonic
         self.seed = seed

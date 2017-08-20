@@ -76,7 +76,7 @@ def get_recovery(options, mnemonic, seed):
 
         return TwoOfThree(mnemonic, wallet, backup_wallet, options.custom_xprv)
     else:
-        return TwoOfTwo(mnemonic, seed, options.nlocktime_filename)
+        return TwoOfTwo(mnemonic, seed, options.nlocktime_file)
 
 
 def main(argv=None):

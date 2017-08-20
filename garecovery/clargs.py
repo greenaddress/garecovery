@@ -35,6 +35,11 @@ def get_args(argv):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
+        'recovery_mode',
+        choices=['2of2', '2of3'],
+        default='2of2',
+        help='Type of recovery to perform')
+    parser.add_argument(
         '--mnemonic-file',
         dest='mnemonic_file',
         help="Name of file containing the user's mnemonic")
@@ -95,26 +100,17 @@ def get_args(argv):
         type=int,
         help='Timeout in minutes for rpc calls')
 
-    subparsers = parser.add_subparsers(
-        help='Select recovery mode',
-        dest='recovery_mode')
-
-    two_of_two = subparsers.add_parser(
-        '2of2',
-        help='Perform 2 of 2 recovery',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    two_of_two = parser.add_argument_group('2of2 options')
     two_of_two.add_argument(
         '--nlocktime-file',
-        dest='nlocktime_filename',
-        required=True,
         help='Name of the nlocktime file sent from GreenAddress')
 
-    two_of_three = subparsers.add_parser(
-        '2of3',
-        help='Perform 2 of 3 recovery',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    two_of_three = parser.add_argument_group('2of3 options')
+    two_of_three.add_argument(
+        '--destination-address',
+        help='An address to recover 2of3 transactions to')
 
-    two_of_three_xpub_exclusive = two_of_three.add_mutually_exclusive_group(required=True)
+    two_of_three_xpub_exclusive = two_of_three.add_mutually_exclusive_group(required=False)
     two_of_three_xpub_exclusive.add_argument(
         '--ga-xpub',
         help='The GreenAddress extended public key. If not provided the recovery tool will '
@@ -125,12 +121,6 @@ def get_args(argv):
         const=DEFAULT_SUBACCOUNT_SEARCH_DEPTH,
         type=int,
         help='If --ga-xpub is not known it is possible to search subaccounts using this option')
-
-    two_of_three.add_argument(
-        '--destination-address',
-        dest='destination_address',
-        required=True,
-        help='An address to recover 2of3 transactions to')
 
     two_of_three_backup_key_exclusive = two_of_three.add_mutually_exclusive_group(required=False)
     two_of_three_backup_key_exclusive.add_argument(
@@ -179,4 +169,30 @@ def get_args(argv):
 
     argcomplete.autocomplete(parser)
     result = parser.parse_args(argv[1:])
+
+    def optval(name):
+        attrname = name.replace('-', '_').replace('__', '')
+        return getattr(result, attrname, None)
+
+    def arg_required(name, display_names=None):
+        if optval(name) is None:
+            name = name if display_names is None else display_names
+            parser.error('%s required for mode %s' % (name, result.recovery_mode))
+
+    def arg_disallowed(name):
+        if optval(name) is not None:
+            parser.error('%s not allowed for mode %s' % (name, result.recovery_mode))
+
+    if result.recovery_mode == '2of2':
+        arg_required('--nlocktime-file')
+        for arg in ['--destination-address', '--ga-xpub', '--search-subaccounts',
+                    '--recovery-mnemonic-file', '--custom-xprv', '--default-feerate']:
+            arg_disallowed(arg)
+
+    elif result.recovery_mode == '2of3':
+        arg_disallowed('--nlocktime-file')
+        arg_required('--destination-address')
+        if optval('search_subaccounts') is None:
+            arg_required('--ga-xpub', '--ga-xpub or --search-subaccounts')
+
     return result
