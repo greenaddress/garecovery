@@ -108,8 +108,15 @@ def xpubs_from_mnemonic(mnemonic, subaccount, testnet):
     if mnemonic is None:
         msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
         raise exceptions.NeedMnemonicOrGaXPub(msg)
+    # Get the original wallet path
     gait_path = gait_path_from_mnemonic(mnemonic)
-    return [derive_ga_xpub(gait_path, subaccount, testnet), ]
+
+    # Include the new derivations for newer wallets and hardware mnemonics
+    written, seed = bip39_mnemonic_to_seed512(mnemonic, None)
+    assert written == BIP39_SEED_LEN_512
+
+    gait_paths = [gait_path] + gait_paths_from_seed(seed)
+    return [derive_ga_xpub(gait_path, subaccount, testnet) for gait_path in gait_paths]
 
 
 def xpubs_from_seed(seed, subaccount, testnet):
