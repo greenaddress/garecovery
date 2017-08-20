@@ -57,7 +57,7 @@ To run the recovery tool in 2of2 mode:
 $ garecovery-cli 2of2 --nlocktime-file /path/to/downloaded/nlocktimes.zip -o garecovery.csv
 ```
 
-Enter your mnemonic when prompted. The recovery tool will show a summary of the
+Enter your mnemonic when prompted. The recovery tool will print a summary of the
 recovery transactions and also write them to a file `garecovery.csv`.
 
 _WARNING_
@@ -65,7 +65,7 @@ _WARNING_
 be sent. Be sure to perform the recovery on a device you trust and take care
 to delete the recovery csv file securely when you are finished with it.
 
-A sample of the `garecovery.csv` data is:
+A sample of the printed summary output is:
 ```
 mnemonic: <your mnemonic here...>
     tx id lock time      total out                destination address     coin value
