@@ -27,7 +27,7 @@ setuptools-pep8==0.9.0 --hash=sha256:f620cd7494015729249bda7260c9b94900d6e6ab27d
 six==1.10.0 --hash=sha256:0ff78c403d9bccf5a425a6d31a12aa6b47f1c21ca4dc2573a7e2f32a97335eb1
 tzlocal==1.4 --hash=sha256:05a2908f7fb1ba8843f03b2360d6ad314dbf2bce4644feb702ccd38527e13059
 
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp27-cp27mu-linux_x86_64.whl; 'linux' in sys_platform and python_version == '2.7' --hash=sha256:d692be12dbfc2447a92028784a166b1c60162c59ecd1059a886b7a45ab4eae00
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp35-cp35m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.5' --hash=sha256:58726a4c1cda61191376f99753ed79445bc31408eca4d83b4156795885c5c6d2
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp27-cp27mu-linux_x86_64.whl; 'linux' in sys_platform and python_version == '2.7' and platform_machine == 'x86_64' --hash=sha256:d692be12dbfc2447a92028784a166b1c60162c59ecd1059a886b7a45ab4eae00
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp35-cp35m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.5' and platform_machine == 'x86_64' --hash=sha256:58726a4c1cda61191376f99753ed79445bc31408eca4d83b4156795885c5c6d2
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp27-cp27m-macosx_10_12_x86_64.whl; sys_platform == 'darwin' and python_version == '2.7' --hash=sha256:031024543ff30ea8fbf96e934df6259f667247f4ace09b3400a6c3841cd948f8
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp36-cp36m-macosx_10_12_x86_64.whl; sys_platform == 'darwin' and python_version == '3.6' --hash=sha256:1f3b2c09793038948a9a2057fa9f6fae6461a510e31bdbf235f6a7eb9014f391
