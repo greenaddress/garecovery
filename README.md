@@ -116,7 +116,7 @@ but instructions are readily available online. Ensure your node is
 running, fully synced and you are able to connect to the RPC interface. You can
 verify this using a command like:
 ```
-/path/to/bitcoin-core/bin/bitcoin-cli getinfo
+/path/to/bitcoin-core/bin/bitcoin-cli getblockchaininfo
 ```
 
 Also note that wallet functionality must not be disabled on your node.
