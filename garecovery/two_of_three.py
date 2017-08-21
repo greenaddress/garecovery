@@ -389,8 +389,7 @@ class TwoOfThree(object):
             keyset_factories = []
             for subaccount in range(*subaccounts):
                 xpubs = ga_xpub.xpubs_from_mnemonic(self.mnemonic, subaccount, self.is_testnet)
-                assert len(xpubs) == 1
-                keyset_factories.append(self._derived_keyset(xpubs[0]))
+                keyset_factories.extend([self._derived_keyset(xpub) for xpub in xpubs])
         else:
             assert clargs.args.ga_xpub
             xpub = bip32_key_from_base58check(clargs.args.ga_xpub)
