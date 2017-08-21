@@ -68,10 +68,9 @@ class TwoOfTwo:
         # Generally one of the derived xpubs will be found in the redeem script. It's possible
         # if the xpub was derived from the variant of the gait path using the mnemonic but a
         # hex seed was provided instead of a mnemonic when running the recovery tool that the key
-        # will not be found. In this case default to mainnet. To correct the behaviour for testnet
-        # in this case pass --testnet explicitly
-        logging.warn("Unable to detect network. Defaulting to mainnet. Pass --testnet to use "
-                     "testnet settings, or pass the full mnemonic rather than hex seed")
+        # will not be found. In this case default to mainnet.
+        logging.warn("Unable to detect network. Defaulting to mainnet. Consider "
+                     "passing the full mnemonic rather than hex seed")
         return False
 
     def _get_signed_tx(self, txdata):
