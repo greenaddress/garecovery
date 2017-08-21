@@ -418,7 +418,7 @@ class TwoOfThree(object):
 
             next_utxos = self.get_utxos(subaccounts, pointers)
             if not next_utxos:
-                logging.info('No trasactions found, stopping scan')
+                logging.info('No transactions found, stopping scan')
                 break
 
             # As long as some utxos have been found in the range (pointers), keep scanning
