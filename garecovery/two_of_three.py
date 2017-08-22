@@ -1,4 +1,3 @@
-import dateparser
 import decimal
 import io
 import logging
@@ -308,13 +307,7 @@ class TwoOfThree(object):
         logging.debug("Connecting to bitcoinrpc to scan blockchain")
         core = bitcoincore.Connection(clargs.args)
 
-        # Convert human-friendly datetime scan_from to utc timestamp
-        if clargs.args.scan_from == '0':
-            scan_from_timestamp = 0
-        else:
-            scan_from = dateparser.parse(clargs.args.scan_from)
-            scan_from_timestamp = int(time.mktime(scan_from.timetuple()))
-        logging.info("Scanning from '{}' = {}".format(clargs.args.scan_from, scan_from_timestamp))
+        logging.info("Scanning from '{}'".format(clargs.args.scan_from))
         logging.warning('This step may take 10 minutes or more')
 
         # Need to import our keysets into core so that it will recognise the
@@ -326,7 +319,7 @@ class TwoOfThree(object):
                 addresses.append(witness.address)
                 requests.append({
                     'scriptPubKey': {"address": witness.address},
-                    'timestamp': scan_from_timestamp,
+                    'timestamp': clargs.args.scan_from,
                     'watchonly': True,
                 })
         logging.info('Importing {} derived addresses into bitcoind'.format(len(requests)))

@@ -7,7 +7,8 @@ import sys
 
 # Define GreenAddress_T0 as the earliest possible GreenAddress UTXO
 # This is used as the default value for scanning the blockchain
-GreenAddress_T0 = "28 Feb 2014"
+# 28 Feb 2014
+GreenAddress_T0 = 1393545600
 
 # Some defaults here make it easier for tests to override them
 DEFAULT_SCAN_FROM = GreenAddress_T0
@@ -147,9 +148,10 @@ def get_args(argv):
         help='When scanning for 2of3 transactions search this number of keys')
     advanced_2of3.add_argument(
         '--scan-from',
+        type=int,
         dest='scan_from',
         default=DEFAULT_SCAN_FROM,
-        help='Start scanning the blockchain for transactions from this date/time. '
+        help='Start scanning the blockchain for transactions from this timestamp. '
              'Scanning the blockchain is slow so if you know your transactions were all after '
              'a certain date you can speed it up by restricting the search range with this '
              'option. Defaults to the inception time of GreenAddress. Pass 0 to scan the entire '
