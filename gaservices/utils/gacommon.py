@@ -1,6 +1,5 @@
 from zipfile import ZipFile
 from io import BytesIO
-from cryptography.fernet import Fernet
 
 import base64
 
@@ -13,8 +12,6 @@ from wallycore import *
 
 
 def _fernet(key, data):
-    key = base64.urlsafe_b64decode(key)
-    data = base64.urlsafe_b64decode(data)
     assert hmac_sha256(key[:16], data[:-32]) == data[-32:]
     res = bytearray(len(data[25:-32]))
     written = aes_cbc(key[16:], data[9:25], data[25:-32], AES_FLAG_DECRYPT, res)
@@ -38,12 +35,8 @@ def _unzip(data, key):
             prefix = b'GAencrypted'
             if data.startswith(prefix):
                 # Encrypted inner zip file: Strip prefix, decrypt and unzip again
-                password = base64.urlsafe_b64encode(bytes(key))
-                encrypted = base64.urlsafe_b64encode(data[len(prefix):])
-                old_data = Fernet(password).decrypt(encrypted)
-                new_data = _fernet(password, encrypted)
-                assert old_data == new_data
-                all_data.extend(_unzip(new_data, key))
+                encrypted = data[len(prefix):]
+                all_data.extend(_unzip(_fernet(key, encrypted), key))
             else:
                 all_data.append(data)
 
