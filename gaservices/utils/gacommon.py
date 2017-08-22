@@ -11,11 +11,11 @@ from gaservices.utils import inscript
 from wallycore import *
 
 
-def _fernet(key, data):
+def _fernet_decrypt(key, data):
     assert hmac_sha256(key[:16], data[:-32]) == data[-32:]
     res = bytearray(len(data[25:-32]))
     written = aes_cbc(key[16:], data[9:25], data[25:-32], AES_FLAG_DECRYPT, res)
-    assert written <= len(res) or len(res) - written <= AES_BLOCK_LEN)
+    assert written <= len(res) and len(res) - written <= AES_BLOCK_LEN
     return res[:written]
 
 
@@ -36,7 +36,7 @@ def _unzip(data, key):
             if data.startswith(prefix):
                 # Encrypted inner zip file: Strip prefix, decrypt and unzip again
                 encrypted = data[len(prefix):]
-                all_data.extend(_unzip(_fernet(key, encrypted), key))
+                all_data.extend(_unzip(_fernet_decrypt(key, encrypted), key))
             else:
                 all_data.append(data)
 
