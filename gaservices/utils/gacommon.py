@@ -12,6 +12,16 @@ from gaservices.utils import inscript
 from wallycore import *
 
 
+def _fernet(key, data):
+    key = base64.urlsafe_b64decode(key)
+    data = base64.urlsafe_b64decode(data)
+    assert hmac_sha256(key[:16], data[:-32]) == data[-32:]
+    res = bytearray(len(data[25:-32]))
+    written = aes_cbc(key[16:], data[9:25], data[25:-32], AES_FLAG_DECRYPT, res)
+    assert written <= len(res) or len(res) - written <= AES_BLOCK_LEN)
+    return res[:written]
+
+
 def _unzip(data, key):
     """Unzip a GreenAddress nlocktimes.zip attachment file.
 
@@ -30,7 +40,10 @@ def _unzip(data, key):
                 # Encrypted inner zip file: Strip prefix, decrypt and unzip again
                 password = base64.urlsafe_b64encode(bytes(key))
                 encrypted = base64.urlsafe_b64encode(data[len(prefix):])
-                all_data.extend(_unzip(Fernet(password).decrypt(encrypted), key))
+                old_data = Fernet(password).decrypt(encrypted)
+                new_data = _fernet(password, encrypted)
+                assert old_data == new_data
+                all_data.extend(_unzip(new_data, key))
             else:
                 all_data.append(data)
 
