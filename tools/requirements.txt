@@ -1,5 +1,5 @@
 argcomplete==1.8.2 --hash=sha256:c2a0a88492c31a42dde41636fbd4c406cde78fe7fb938ab511b733bff6358782
-coverage==4.4.1 --hash=sha256:381be5d31d3f0d912334cf2c159bc7bea6bfe6b0e3df6061a3bf2bf88359b1f6 --hash=sha256:700040c354f0230287906b1276635552a3def4b646e0145555bc9e2e5da9e365 --hash=sha256:0f1883eab9c19aa243f51308751b8a2a547b9b817b721cc0ecf3efb99fafbea7 --hash=sha256:c820a533a943ebc860acc0ce6a00dd36e0fdf2c6f619ff8225755169428c5fa2
+coverage==4.4.1 --hash=sha256:381be5d31d3f0d912334cf2c159bc7bea6bfe6b0e3df6061a3bf2bf88359b1f6 --hash=sha256:700040c354f0230287906b1276635552a3def4b646e0145555bc9e2e5da9e365 --hash=sha256:0f1883eab9c19aa243f51308751b8a2a547b9b817b721cc0ecf3efb99fafbea7 --hash=sha256:c820a533a943ebc860acc0ce6a00dd36e0fdf2c6f619ff8225755169428c5fa2 --hash=sha256:7a9c44400ee0f3b4546066e0710e1250fd75831adc02ab99dda176ad8726f424
 dateparser==0.6.0 --hash=sha256:e2629d2f8361722c6047138ca085256c9f2cf5cc657fd66122aa0564afa4dc33
 funcsigs==1.0.2 --hash=sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca
 mock==2.0.0 --hash=sha256:5ce3c71c5545b472da17b72268978914d0252980348636840bd34a00b5cc96c1
@@ -24,3 +24,4 @@ https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp35-cp35m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.5' and platform_machine == 'x86_64' --hash=sha256:58726a4c1cda61191376f99753ed79445bc31408eca4d83b4156795885c5c6d2
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp27-cp27m-macosx_10_12_x86_64.whl; sys_platform == 'darwin' and python_version == '2.7' --hash=sha256:031024543ff30ea8fbf96e934df6259f667247f4ace09b3400a6c3841cd948f8
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.4.0/wallycore-0.4.0-cp36-cp36m-macosx_10_12_x86_64.whl; sys_platform == 'darwin' and python_version == '3.6' --hash=sha256:1f3b2c09793038948a9a2057fa9f6fae6461a510e31bdbf235f6a7eb9014f391
+https://github.com/ElementsProject/libwally-core/archive/release_0.4.0.tar.gz; platform_machine != 'x86_64' --hash=sha256:977e2f8be22755d1ff9329ce948974c7624dbf3375d451552cf31d2ffb93dd14
