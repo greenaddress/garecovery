@@ -9,7 +9,7 @@ before_install:
   - docker pull greenaddress/recovery_ubuntu16.04@sha256:ac3017a1ca59cdb13f57491034973b3848636e6d0c44bdf3af4f13d39aed92b4
 
 script:
-  - docker run -v $PWD:/recovery greenaddress/recovery /usr/bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
-  - docker run -v $PWD:/recovery greenaddress/recovery /usr/bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
-  - docker run -v $PWD:/recovery greenaddress/recovery_ubuntu16.04 /bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
-  - docker run -v $PWD:/recovery greenaddress/recovery_ubuntu16.04 /bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --upgrade setuptools pip && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
+  - docker run -v $PWD:/recovery greenaddress/recovery /usr/bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
+  - docker run -v $PWD:/recovery greenaddress/recovery /usr/bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
+  - docker run -v $PWD:/recovery greenaddress/recovery_ubuntu16.04 /bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"
+  - docker run -v $PWD:/recovery greenaddress/recovery_ubuntu16.04 /bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements.txt && ./tools/dobuild.sh"

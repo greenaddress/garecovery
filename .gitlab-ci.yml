@@ -10,7 +10,6 @@ test_recoverycli:
     - cd $CI_PROJECT_DIR
     - virtualenv -p python2 venv
     - source venv/bin/activate
-    - pip install --upgrade setuptools pip
     - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
@@ -26,7 +25,6 @@ test_recoverycli_py3:
     - cd $CI_PROJECT_DIR
     - virtualenv -p python3 venv
     - source venv/bin/activate
-    - pip install --upgrade setuptools pip
     - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
@@ -42,7 +40,6 @@ test_recoverycli_py2_u16_04:
     - cd $CI_PROJECT_DIR
     - virtualenv -p python2 venv
     - source venv/bin/activate
-    - pip install --upgrade setuptools pip
     - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
@@ -58,7 +55,6 @@ test_recoverycli_py3_u16_04:
     - cd $CI_PROJECT_DIR
     - virtualenv -p python3 venv
     - source venv/bin/activate
-    - pip install --upgrade setuptools pip
     - pip install --require-hashes -r tools/requirements.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
