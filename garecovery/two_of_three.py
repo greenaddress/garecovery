@@ -180,8 +180,6 @@ class UTXO:
             raise exceptions.NoFeeRate(msg)
 
         fee_satoshi_byte = decimal.Decimal(default_feerate)
-        logging.warning('estimatesmartfee returned -1, using default feerate='
-                        '{} satoshis/byte'.format(fee_satoshi_byte))
         return fee_satoshi_byte
 
     def get_feerate(self):

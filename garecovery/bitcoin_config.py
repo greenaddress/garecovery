@@ -32,7 +32,7 @@ class Config:
                 self.config.readfp(io.StringIO(content))
 
         except IOError:
-            logging.warn('Failed to open bitcoin config file {}'.format(config_filename))
+            logging.debug('Failed to open bitcoin config file {}'.format(config_filename))
 
     def get_val(self, key):
         if self.config.has_option('{}'.format(DUMMY_SECTION), key):
