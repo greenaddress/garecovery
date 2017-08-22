@@ -9,6 +9,7 @@ import pycoin.tx
 import pycoin.ui
 import pycoin.key.BIP32Node
 import pycoin.key.Key
+import pycoin.encoding
 
 from gaservices.utils import gacommon
 
@@ -272,9 +273,12 @@ class UTXO:
 
 
 def is_testnet_address(address):
-    key = pycoin.key.Key.from_text(address)
-    netcode = key.netcode()
-    return netcode != 'BTC'
+    try:
+        key = pycoin.key.Key.from_text(address)
+        netcode = key.netcode()
+        return netcode != 'BTC'
+    except pycoin.encoding.EncodingError:
+        return True
 
 
 class TwoOfThree(object):
