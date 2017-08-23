@@ -393,12 +393,9 @@ class TwoOfThree(object):
             xpub = bip32_key_from_base58check(clargs.args.ga_xpub)
             keyset_factories = [self._derived_keyset(xpub), ]
 
-        keysets = []
-        for DerivedKeySet in keyset_factories:
-            for pointer in range(*pointers):
-                keysets.append(DerivedKeySet(pointer))
-
-        return keysets
+        return [DerivedKeySet(pointer)
+                for DerivedKeySet in keyset_factories
+                for pointer in range(*pointers)]
 
     def get_utxos(self, subaccounts, pointers):
         keysets = self.get_keysets(subaccounts, pointers)
