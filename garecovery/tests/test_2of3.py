@@ -83,6 +83,9 @@ class AuthServiceProxy:
     def getrawtransaction(self, txid):
         return self.tx_by_id[txid].as_hex()
 
+    def batch_(self, requests):
+        return [getattr(self, call)(params) for call, params in requests]
+
     estimatesmartfee = mock.Mock()
     getblockcount = mock.Mock()
     getnewaddress = mock.Mock()

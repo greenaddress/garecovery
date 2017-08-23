@@ -344,27 +344,30 @@ class TwoOfThree(object):
         # This is a rather unfortunate loop because there is no other way to correlate the
         # results from listunspent with the requests to importmulti
         utxos = []
-        for tx in all_utxos:
-            for keyset in keysets:
-                for witness in keyset.witnesses.values():
-                    if tx['scriptPubKey'] == witness.scriptPubKey:
-                        txid = tx['txid']
-                        logging.info('Found recoverable transaction, '
-                                     'subaccount={}, pointer={}, txid={}, witness type={}'.
-                                     format(keyset.subaccount, keyset.pointer, txid,
-                                            witness.type_))
-                        raw_tx = core.getrawtransaction(txid)
-                        logging.debug("found raw={}".format(raw_tx))
-                        tx_ = pycoin.tx.Tx.from_hex(raw_tx)
-                        dest_address = self.get_destination_address()
-                        utxo = UTXO(
-                            keyset,
-                            witness.type_,
-                            tx['vout'],
-                            tx_,
-                            dest_address,
-                        )
-                        utxos.append(utxo)
+        tx_matches = [(tx['txid'], keyset, witness, tx['vout'])
+                      for tx in all_utxos
+                      for keyset in keysets
+                      for witness in keyset.witnesses.values()
+                      if tx['scriptPubKey'] == witness.scriptPubKey]
+
+        raw_txs = core.batch_([["getrawtransaction", tx[0]] for tx in tx_matches])
+        dest_address = self.get_destination_address()
+        for txid_match, raw_tx in zip(tx_matches, raw_txs):
+            txid, keyset, witness, txvout = txid_match
+            logging.info('Found recoverable transaction, '
+                         'subaccount={}, pointer={}, txid={}, witness type={}'.
+                         format(keyset.subaccount, keyset.pointer, txid,
+                                witness.type_))
+            logging.debug("found raw={}".format(raw_tx))
+            tx_ = pycoin.tx.Tx.from_hex(raw_tx)
+            utxo = UTXO(
+                keyset,
+                witness.type_,
+                txvout,
+                tx_,
+                dest_address,
+            )
+            utxos.append(utxo)
         return utxos
 
     def _derived_keyset(self, ga_xpub):
