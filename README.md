@@ -123,7 +123,7 @@ Also note that wallet functionality must not be disabled on your node.
 
 Run the recovery tool in 2of3 mode:
 ```
-$ garecovery-cli 2of3 --destination-address=XXXX -o garecovery.csv
+$ garecovery-cli 2of3 --destination-address=XXXX -o garecovery.csv --ga-xpub=YYYY
 ```
 
 The tool will prompt you for your mnemonic, recovery mnemonic and xpub. You
