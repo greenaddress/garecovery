@@ -816,7 +816,7 @@ def test_authenticate_password(HTTPConnection):
         '--destination-address={}'.format(destination_address),
     ]
 
-    check_http_auth(HTTPConnection, args, '127.0.0.1', 18332, 600, b'abc:abc')
+    check_http_auth(HTTPConnection, args, '127.0.0.1', 18332, 3600, b'abc:abc')
 
 
 @mock.patch('bitcoinrpc.authproxy.httplib.HTTPConnection')
@@ -837,7 +837,7 @@ def test_authenticate_cookiefile(HTTPConnection):
     # file, reading the cookiefile will also return this config file, however for the purposes
     # of the unit test it doesn't matter
     cookie = mock_read_data.strip().encode("ascii")
-    check_http_auth(HTTPConnection, args, '127.0.0.1', 18332, 600, cookie)
+    check_http_auth(HTTPConnection, args, '127.0.0.1', 18332, 3600, cookie)
 
 
 def test_core_daemon_not_available():
