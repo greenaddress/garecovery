@@ -84,24 +84,26 @@ def main(argv=None):
     logging.basicConfig(level=clargs.args.loglevel)
 
     try:
-        mnemonic_or_hex_seed = get_mnemonic(clargs.args)
-        seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed)
-
-        recovery = get_recovery(clargs.args, mnemonic, seed)
-
-        # Set the pycoin netcode
-        netcode = 'XTN' if recovery.is_testnet else 'BTC'
-        pycoin.networks.default.set_default_netcode(netcode)
-
+        # Open the csv output file before doing anything else in case it fails
+        # Do not overwrite the output file if it already exists
         output_filename = clargs.args.output_file
         if os.path.exists(output_filename):
-            # Refuse to overwite an existing output file
-            msg = ('Output file "{}" already exists, refusing to overwrite. Either remove the '
-                   'existing file or pass -o to specify a different output'
-                   'file'.format(output_filename))
-            raise exceptions.OfileExistsError(msg)
+            raise exceptions.OfileExistsError(
+                'Output file "{}" already exists, refusing to overwrite. Either remove the '
+                'existing file or pass -o to specify a different output file'
+                .format(output_filename))
 
         with open(output_filename, "w") as ofile:
+
+            mnemonic_or_hex_seed = get_mnemonic(clargs.args)
+            seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed)
+
+            recovery = get_recovery(clargs.args, mnemonic, seed)
+
+            # Set the pycoin netcode
+            netcode = 'XTN' if recovery.is_testnet else 'BTC'
+            pycoin.networks.default.set_default_netcode(netcode)
+
             txs = recovery.get_transactions()
             formatting.write_summary(txs, sys.stdout)
             formatting.write_csv(txs, ofile)
