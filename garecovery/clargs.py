@@ -97,7 +97,7 @@ def get_args(argv):
         dest='config_filename')
     rpc.add_argument(
         '--rpc-timeout-minutes',
-        default=10,
+        default=60,
         type=int,
         help='Timeout in minutes for rpc calls')
 
