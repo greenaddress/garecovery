@@ -13,6 +13,8 @@ from .two_of_three import TwoOfThree
 
 import pycoin.networks.default
 
+from . import monkeypatch_pycoin
+
 
 # Python 2/3 compatibility
 try:
