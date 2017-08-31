@@ -44,6 +44,8 @@ def test_standard_segwit():
     summary = parse_summary(output)
     assert len(summary) == 1
     assert summary[0]['destination address'] == 'momxJW75A8PoiiJhCPGmiC4rTsE7yGLVyh'
+    assert summary[0]['tx id'] == (
+        '7a00ab5077c936cf47ffb9331ee7e9d0de064cb6dd67f0d3da824b6b85c5cb00')
 
 
 @mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
