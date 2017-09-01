@@ -20,6 +20,18 @@ garecovery.recoverycli.os.path.exists = path_exists
 
 
 @mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
+def test_no_transactions():
+    """Test that an nlocktimes.zip with no transactions generates a meaningful diagnostic"""
+    output, ofiles = get_output_ex([
+        '--mnemonic-file={}'.format(datafile('mnemonic_12.txt')),
+        '2of2',
+        '--nlocktime-file={}'.format(datafile('empty_nlocktimes.zip')),
+    ],
+        expect_error=True)
+    assert 'contains no transactions' in output
+
+
+@mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
 @mock.patch('garecovery.recoverycli.os.path.exists', lambda filename: True)
 def test_ofile_exists():
     """Test that an appropriate error is returned if the output file exists"""

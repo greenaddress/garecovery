@@ -8,6 +8,7 @@ from gaservices.utils import gacommon
 from wallycore import *
 
 from . import clargs
+from . import exceptions
 from . import ga_xpub
 
 
@@ -23,6 +24,9 @@ class TwoOfTwo:
         chaincode = bip32_key_get_chain_code(self.wallet)
 
         zipdata = gacommon._unzip(self.compressed_zip, chaincode)
+        if len(zipdata) == 0:
+            raise exceptions.GARecoveryError(
+                'The nlocktimes file "{}" contains no transactions'.format(nlocktime_file))
         self.txdata = [json.loads(txdata.decode("ascii")) for txdata in zipdata]
 
         self.is_testnet = self._is_testnet()
