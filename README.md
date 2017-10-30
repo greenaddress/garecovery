@@ -42,8 +42,8 @@ automatically generates special "nLockTime" transactions, pre-signed by
 GreenAddress but not spendable until some time in the future (the nLockTime).
 
 To recover coins from a 2of2 account you simply wait until each nLockTime
-transaction becomes spendable (90 days by default), then countersign and
-broadcast it using the recovery tool. The coins are send to a key derived
+transaction becomes spendable (90 days by default), then countersign using
+the recovery tool and broadcast. The coins are sent to a key derived
 from your login mnemonics which you can then sweep into any wallet.
 
 You will need:
