@@ -5,6 +5,7 @@ import binascii
 import decimal
 import io
 import logging
+import math
 import mock
 import os
 import pytest
@@ -163,7 +164,7 @@ def expect_feerate(fee_satoshi_byte, args=None, is_segwit=False, amount=None, to
     else:
         assert total_tx_size == base_tx_size
     tx_weight = base_tx_size * 3 + total_tx_size
-    virtual_tx_size = tx_weight / 4
+    virtual_tx_size = int(math.ceil(tx_weight / 4.0))
     tx_len = virtual_tx_size
 
     expected_fee = decimal.Decimal(fee_satoshi_byte * tx_len)

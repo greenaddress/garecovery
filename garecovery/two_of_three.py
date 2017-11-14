@@ -1,6 +1,7 @@
 import decimal
 import io
 import logging
+import math
 import os
 import shutil
 import time
@@ -63,7 +64,7 @@ def get_virtual_tx_size(tx):
     base_tx_size = streamed_size(tx, include_witness_data=False)
     total_tx_size = streamed_size(tx, include_witness_data=True)
     tx_weight = base_tx_size * 3 + total_tx_size
-    return tx_weight // 4
+    return int(math.ceil(tx_weight / 4.0))
 
 
 class P2SH:
