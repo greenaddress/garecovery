@@ -14,7 +14,7 @@ import sys
 
 import bitcoinrpc
 
-import pycoin.tx
+from pycoin.tx.Tx import Tx
 
 import garecovery.recoverycli
 import garecovery.clargs
@@ -50,7 +50,7 @@ class AuthServiceProxy:
         self.tx_by_id = {}
         self.txout_by_address = {}
         for line in open(datafile(txfile)).readlines():
-            tx = pycoin.tx.Tx.from_hex(line.strip())
+            tx = Tx.from_hex(line.strip())
             self.tx_by_id[tx.id()] = tx
             for vout, txout in enumerate(tx.txs_out):
                 self.txout_by_address[txout.address('XTN')] = (tx, vout, txout)
@@ -147,7 +147,7 @@ def expect_feerate(fee_satoshi_byte, args=None, is_segwit=False, amount=None, to
         return
 
     output = get_output(args).strip()
-    output_tx = pycoin.tx.Tx.from_hex(output)
+    output_tx = Tx.from_hex(output)
     assert len(output_tx.txs_out) == 1
 
     assert output_tx.has_witness_data() == is_segwit
@@ -354,7 +354,7 @@ def test_recover_2of3(mock_bitcoincore):
     assert output == open(datafile("signed_2of3_5")).read().strip()
 
     # Check replace by fee is set
-    tx = pycoin.tx.Tx.from_hex(output)
+    tx = Tx.from_hex(output)
     assert len(tx.txs_in) == 1
     assert tx.txs_in[0].sequence == int(32*'1', 2) - 2
 
@@ -390,7 +390,7 @@ def test_set_nlocktime(mock_bitcoincore):
     ]
 
     output = get_output(args).strip()
-    tx = pycoin.tx.Tx.from_hex(output)
+    tx = Tx.from_hex(output)
     assert tx.lock_time == current_blockheight
 
 

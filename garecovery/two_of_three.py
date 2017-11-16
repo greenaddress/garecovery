@@ -6,11 +6,14 @@ import os
 import shutil
 import time
 
-import pycoin.tx
 import pycoin.ui
 import pycoin.key.BIP32Node
 import pycoin.key.Key
 import pycoin.encoding
+
+from pycoin.tx.Tx import Tx
+from pycoin.tx.TxIn import TxIn
+from pycoin.tx.TxOut import TxOut
 
 from gaservices.utils import gacommon
 
@@ -228,16 +231,16 @@ class UTXO:
 
         logging.debug("Create tx: {} sat -> {}".format(adjusted_amount_satoshi, self.dest_address))
         logging.info("Input tx id = {}, vout={}".format(self.tx.id().encode("ascii"), self.vout))
-        txin = pycoin.tx.TxIn(self.tx.hash(), self.vout, sequence=MAX_BIP125_RBF_SEQUENCE)
+        txin = TxIn(self.tx.hash(), self.vout, sequence=MAX_BIP125_RBF_SEQUENCE)
         scriptPubKey = pycoin.ui.script_obj_from_address(self.dest_address)
-        txout = pycoin.tx.TxOut(adjusted_amount_satoshi, scriptPubKey.script())
+        txout = TxOut(adjusted_amount_satoshi, scriptPubKey.script())
 
         # Set nlocktime to the current blockheight to discourage 'fee sniping', as per the core
         # wallet implementation
         nlocktime = util.get_current_blockcount() or 0
 
         version = 1
-        tx = pycoin.tx.Tx(version, [txin, ], [txout, ], nlocktime)
+        tx = Tx(version, [txin, ], [txout, ], nlocktime)
         return tx.as_hex()
 
     def get_fee(self, tx):
@@ -360,7 +363,7 @@ class TwoOfThree(object):
                          format(keyset.subaccount, keyset.pointer, txid,
                                 witness.type_))
             logging.debug("found raw={}".format(raw_tx))
-            tx_ = pycoin.tx.Tx.from_hex(raw_tx)
+            tx_ = Tx.from_hex(raw_tx)
             utxo = UTXO(
                 keyset,
                 witness.type_,
@@ -434,4 +437,4 @@ class TwoOfThree(object):
             clargs.args.search_subaccounts or 0)
 
         raw_txs = self.sign_utxos()
-        return [pycoin.tx.Tx.from_hex(raw_tx) for raw_tx in raw_txs]
+        return [Tx.from_hex(raw_tx) for raw_tx in raw_txs]
