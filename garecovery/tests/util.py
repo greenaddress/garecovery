@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-import pycoin.tx
+from pycoin.tx.Tx import Tx
 
 try:
     # Python 2
@@ -151,7 +151,7 @@ def get_output(args, expect_error=False):
 
 def pycoin_verify_txs(txs, utxos, expect_witness):
 
-    txs = [pycoin.tx.Tx.from_hex(tx) for tx in txs]
+    txs = [Tx.from_hex(tx) for tx in txs]
 
     for tx in txs:
         txs_in = tx.txs_in
@@ -168,7 +168,7 @@ def pycoin_verify_txs(txs, utxos, expect_witness):
     for idx, utxo in enumerate(utxos):
         utxo = ''.join(utxo.split())
         tx = txs[idx]
-        txout = pycoin.tx.Tx.from_hex(utxo).txs_out[:1]
+        txout = Tx.from_hex(utxo).txs_out[:1]
         tx.set_unspents(txout)
         tx.check()
         assert tx.bad_signature_count() == 0
