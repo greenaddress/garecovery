@@ -58,13 +58,11 @@ def test_standard_segwit():
     assert summary[0]['destination address'] == 'momxJW75A8PoiiJhCPGmiC4rTsE7yGLVyh'
 
 
-@mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
-def test_standard_summary():
-    """Standard case - check summary"""
+def do_test_standard_summary(nlocktimes_filename):
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
         '2of2',
-        '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
+        '--nlocktime-file={}'.format(datafile(nlocktimes_filename)),
     ])
     summary = parse_summary(output)
 
@@ -100,6 +98,18 @@ def test_standard_summary():
         assert format_['tx id'] == ('acd2c5694a91eeeab07178ab9cd6c4b'
                                     '7c57457e561b43120b6c78dbc4a5bf96a')
         assert format_['destination address'] == 'mhMmLtqyR9VgGXAg8dUmCnPtJS8gbMqGRL'
+
+
+@mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
+def test_standard_summary():
+    """Standard case - check summary"""
+    do_test_standard_summary('compressed_1.zip')
+
+
+@mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
+def test_standard_summary_old_nlocktimes():
+    """Standard case - check summary"""
+    do_test_standard_summary('compressed_1_old.zip')
 
 
 @mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)

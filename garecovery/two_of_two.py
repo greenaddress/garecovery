@@ -2,7 +2,9 @@ import logging
 import json
 import sys
 
-import pycoin.tx
+from pycoin.tx.Tx import Tx
+from pycoin.tx.TxIn import TxIn
+from pycoin.tx.script.tools import disassemble
 
 from gaservices.utils import gacommon
 from wallycore import *
@@ -29,7 +31,30 @@ class TwoOfTwo:
                 'The nlocktimes file "{}" contains no transactions'.format(nlocktime_file))
         self.txdata = [json.loads(txdata.decode("ascii")) for txdata in zipdata]
 
+        self.fixup_old_nlocktimes()
+
         self.is_testnet = self._is_testnet()
+
+    def fixup_old_nlocktimes(self):
+        """Fixup data from old format nlocktimes files
+
+        Older nlocktimes files do not contain explicit prevout_signatures, prevout_scripts or
+        prevout_script_types. Detect this and extract them from the raw transaction to make the
+        txdata look consistent to the rest of the code. Note that segwit is not being handled
+        here because old style nlocktimes predate segwit
+        """
+        for txdata in self.txdata:
+            if 'prevout_signatures' not in txdata:
+                tx = Tx.from_hex(txdata['tx'])
+                NON_SEGWIT_P2SH = 10
+                txdata['prevout_script_types'] = [NON_SEGWIT_P2SH] * len(tx.txs_in)
+                txdata['prevout_signatures'] = []
+                txdata['prevout_scripts'] = []
+                for txin in tx.txs_in:
+                    dis = disassemble(txin.script).split()
+                    _, ga_signature, _, redeem_script = dis
+                    txdata['prevout_signatures'].append(ga_signature[1:-1])
+                    txdata['prevout_scripts'].append(redeem_script[1:-1])
 
     def _is_testnet(self):
         """Return true if the GreenAddress xpub for testnet is found in the redeem script
