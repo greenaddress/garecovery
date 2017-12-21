@@ -24,3 +24,7 @@ class OfileExistsError(GARecoveryError):
 
 class NoFeeRate(GARecoveryError):
     pass
+
+
+class IncorrectMnemonic(GARecoveryError):
+    pass

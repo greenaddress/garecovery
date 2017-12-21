@@ -58,6 +58,19 @@ def test_standard_segwit():
     assert summary[0]['destination address'] == 'momxJW75A8PoiiJhCPGmiC4rTsE7yGLVyh'
 
 
+@mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
+def test_incorrect_mnemonic():
+    """Test the error generated when using an incorrect mnemonic"""
+    for incorrect_mnemonic in 'mnemonic_1_munged.txt', 'mnemonic_2.txt':
+        output, ofiles = get_output_ex([
+            '--mnemonic-file={}'.format(datafile(incorrect_mnemonic)),
+            '2of2',
+            '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
+        ],
+            expect_error=True)
+        assert 'Incorrect mnemonic/hex seed' in output
+
+
 def do_test_standard_summary(nlocktimes_filename):
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),

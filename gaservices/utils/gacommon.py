@@ -10,9 +10,12 @@ from gaservices.utils.btc_ import tx_segwit_hash
 from gaservices.utils import inscript
 from wallycore import *
 
+from garecovery import exceptions
+
 
 def _fernet_decrypt(key, data):
-    assert hmac_sha256(key[:16], data[:-32]) == data[-32:]
+    if hmac_sha256(key[:16], data[:-32]) != data[-32:]:
+        raise exceptions.IncorrectMnemonic("Incorrect mnemonic/hex seed")
     res = bytearray(len(data[25:-32]))
     written = aes_cbc(key[16:], data[9:25], data[25:-32], AES_FLAG_DECRYPT, res)
     assert written <= len(res) and len(res) - written <= AES_BLOCK_LEN
