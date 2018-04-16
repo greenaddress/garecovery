@@ -7,17 +7,10 @@ import shutil
 import time
 
 import pycoin.ui
-import pycoin.key.BIP32Node
-import pycoin.key.Key
-import pycoin.encoding
 
-from pycoin.tx.Tx import Tx
-from pycoin.tx.TxIn import TxIn
-from pycoin.tx.TxOut import TxOut
+from gaservices.utils import gacommon, txutil
 
-from gaservices.utils import gacommon
-
-from wallycore import *
+import wallycore as wally
 
 from . import bitcoincore
 from . import clargs
@@ -26,7 +19,7 @@ from . import ga_xpub
 from . import util
 
 
-satoshi_per_btc = decimal.Decimal(1e8)
+SATOSHI_PER_BTC = decimal.Decimal(1e8)
 
 
 HARDENED = 0x80000000
@@ -42,32 +35,19 @@ def get_scriptpubkey_hex(redeem_script_hash_hex):
 
 def get_redeem_script(keys):
     """Return a 2of3 multisig redeem script as a hex string"""
-    keys = [hex_from_bytes(key) for key in keys]
+    keys = [wally.hex_from_bytes(key) for key in keys]
     logging.debug("get_redeem_script public keys = {}".format(keys))
-    return hex_to_bytes("5221{}21{}21{}53ae".format(*keys))
+    return wally.hex_to_bytes("5221{}21{}21{}53ae".format(*keys))
 
 
 def bip32_key_from_base58check(base58check):
-    raw = base58check_to_bytes(base58check)
-    return bip32_key_unserialize(raw)
+    raw = wally.base58check_to_bytes(base58check)
+    return wally.bip32_key_unserialize(raw)
 
 
 def derive_user_key(wallet, subaccount, branch=1):
     subaccount_path = gacommon.get_subaccount_path(subaccount)
-    return gacommon.derive_hd_key(wallet, subaccount_path + [branch, ])
-
-
-def get_virtual_tx_size(tx):
-    """Return the virtual transaction size as defined in BIP141"""
-    def streamed_size(tx, include_witness_data):
-        """Return the streamed size of a tx, optionally with witness data"""
-        buffer_ = io.BytesIO()
-        tx.stream(buffer_, include_witness_data=include_witness_data)
-        return len(buffer_.getvalue())
-    base_tx_size = streamed_size(tx, include_witness_data=False)
-    total_tx_size = streamed_size(tx, include_witness_data=True)
-    tx_weight = base_tx_size * 3 + total_tx_size
-    return int(math.ceil(tx_weight / 4.0))
+    return gacommon.derive_hd_key(wallet, subaccount_path + [branch])
 
 
 class P2SH:
@@ -76,14 +56,14 @@ class P2SH:
 
     def __init__(self, pubkeys, testnet):
         self.redeem_script = get_redeem_script(pubkeys)
-        self.redeem_script_hex = hex_from_bytes(self.redeem_script)
+        self.redeem_script_hex = wally.hex_from_bytes(self.redeem_script)
 
-        script_hash = hash160(self.get_witness_script())
-        script_hash_hex = hex_from_bytes(script_hash)
+        script_hash = wally.hash160(self.get_witness_script())
+        script_hash_hex = wally.hex_from_bytes(script_hash)
         self.scriptPubKey = get_scriptpubkey_hex(script_hash_hex)
 
         ver = b'\xc4' if testnet else b'\x05'
-        self.address = base58check_from_bytes(ver + script_hash)
+        self.address = wally.base58check_from_bytes(ver + script_hash)
 
     def get_witness_script(self):
         return self.redeem_script
@@ -97,7 +77,7 @@ class P2WSH(P2SH):
         P2SH.__init__(self, pubkeys, testnet)
 
     def get_witness_script(self):
-        return hex_to_bytes('0020') + sha256(self.redeem_script)
+        return wally.witness_program_from_bytes(self.redeem_script, wally.WALLY_SCRIPT_SHA256)
 
 
 def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
@@ -110,7 +90,7 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
     """
     # The GreenAddress extended public key (ga_xpub) also contains the subaccount index encoded
     # as the child_num
-    subaccount = bip32_key_get_child_num(ga_xpub)
+    subaccount = wally.bip32_key_get_child_num(ga_xpub)
 
     # Given the subaccount the user keys can be derived. Optionally the user may provide a custom
     # extended private key as the backup
@@ -119,7 +99,7 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
         logging.debug("Using custom xprv")
         root_xprv = bip32_key_from_base58check(custom_xprv)
         branch = 1
-        xprv = gacommon.derive_hd_key(root_xprv, [branch, ], BIP32_FLAG_KEY_PRIVATE)
+        xprv = gacommon.derive_hd_key(root_xprv, [branch], wally.BIP32_FLAG_KEY_PRIVATE)
         user_keys.append(xprv)
     assert len(user_keys) == 2
 
@@ -134,19 +114,19 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
             self.pointer = pointer
 
             # Derive the GreenAddress public key for this pointer value
-            ga_key = gacommon.derive_hd_key(ga_xpub, [pointer, ], BIP32_FLAG_KEY_PUBLIC)
-            self.ga_key = bip32_key_get_pub_key(ga_key)
-            logging.debug("ga_key = {}".format(hex_from_bytes(self.ga_key)))
+            ga_key = gacommon.derive_hd_key(ga_xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
+            self.ga_key = wally.bip32_key_get_pub_key(ga_key)
+            logging.debug("ga_key = {}".format(wally.hex_from_bytes(self.ga_key)))
 
             # Derive the user private keys for this pointer value
-            flags = BIP32_FLAG_KEY_PRIVATE
-            user_key_paths = [(key, [pointer, ]) for key in user_keys]
+            flags = wally.BIP32_FLAG_KEY_PRIVATE
+            user_key_paths = [(key, [pointer]) for key in user_keys]
             private_keys = [gacommon.derive_hd_key(*path, flags=flags) for path in user_key_paths]
-            self.private_keys = [bip32_key_get_priv_key(key) for key in private_keys]
+            self.private_keys = [wally.bip32_key_get_priv_key(k) for k in private_keys]
 
             # Derive the user public keys from the private keys
-            user_public_keys = [ec_public_key_from_private_key(key) for key in self.private_keys]
-            public_keys = [self.ga_key, ] + user_public_keys
+            user_public_keys = [wally.ec_public_key_from_private_key(k) for k in self.private_keys]
+            public_keys = [self.ga_key] + user_public_keys
 
             # Script could be segwit or not - generate both segwit and non-segwit addresses
             self.witnesses = {cls.type_: cls(public_keys, testnet) for cls in (P2SH, P2WSH)}
@@ -159,10 +139,12 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
 class UTXO:
 
     def __init__(self, keyset, witness_type, vout, tx, dest_address):
+        assert vout < wally.tx_get_num_outputs(tx)
+
         self.keyset = keyset
         self.vout = vout
         self.tx = tx
-        assert self.vout < len(self.tx.txs_out)
+        self.txhash_bin = txutil.get_txhash_bin(tx)
         self.dest_address = dest_address
         self.witness = self.keyset.witnesses[witness_type]
 
@@ -199,7 +181,7 @@ class UTXO:
             # estimatesmartfee returns -1 to indicate it is unable to provide a fee estimate
             fee_satoshi_byte = self.get_default_feerate()
         else:
-            fee_satoshi_kb = fee_btc_kb * satoshi_per_btc
+            fee_satoshi_kb = fee_btc_kb * SATOSHI_PER_BTC
             fee_satoshi_byte = round(fee_satoshi_kb / 1000)
 
             logging.debug('feerate = {} BTC/kb'.format(fee_btc_kb))
@@ -215,8 +197,7 @@ class UTXO:
 
         May return a transaction with amount=0 if the input amount is not enough to cover fees
         """
-        txout = self.tx.txs_out[self.vout]
-        amount_satoshi = txout.coin_value
+        amount_satoshi = wally.tx_get_output_satoshi(self.tx, self.vout)
 
         if fee_satoshi >= amount_satoshi:
             logging.warning('Insufficient funds to cover fee')
@@ -227,25 +208,21 @@ class UTXO:
         logging.debug('tx amount = amount - fee = {} - {} = {}'.format(
             amount_satoshi, fee_satoshi, adjusted_amount_satoshi))
         assert adjusted_amount_satoshi >= 0
-        adjusted_amount_btc = decimal.Decimal(adjusted_amount_satoshi)/satoshi_per_btc
+        adjusted_amount_btc = decimal.Decimal(adjusted_amount_satoshi) / SATOSHI_PER_BTC
 
         logging.debug("Create tx: {} sat -> {}".format(adjusted_amount_satoshi, self.dest_address))
-        logging.info("Input tx id = {}, vout={}".format(self.tx.id().encode("ascii"), self.vout))
-        txin = TxIn(self.tx.hash(), self.vout, sequence=MAX_BIP125_RBF_SEQUENCE)
-        scriptPubKey = pycoin.ui.script_obj_from_address(self.dest_address)
-        txout = TxOut(adjusted_amount_satoshi, scriptPubKey.script())
 
         # Set nlocktime to the current blockheight to discourage 'fee sniping', as per the core
         # wallet implementation
-        nlocktime = util.get_current_blockcount() or 0
-
-        version = 1
-        tx = Tx(version, [txin, ], [txout, ], nlocktime)
-        return tx.as_hex()
+        tx = txutil.new(util.get_current_blockcount() or 0, version=1)
+        txutil.add_input(tx, self.txhash_bin, self.vout, MAX_BIP125_RBF_SEQUENCE)
+        scriptPubKey = pycoin.ui.script_obj_from_address(self.dest_address)
+        txutil.add_output(tx, adjusted_amount_satoshi, scriptPubKey.script())
+        return txutil.to_hex(tx)
 
     def get_fee(self, tx):
         """Given a raw transaction return the fee"""
-        virtual_tx_size = get_virtual_tx_size(tx)
+        virtual_tx_size = wally.tx_get_vsize(tx)
         logging.debug("virtual transaction size = {}".format(virtual_tx_size))
         fee_satoshi_byte = self.get_feerate()
         fee_satoshi = fee_satoshi_byte * virtual_tx_size
@@ -257,9 +234,9 @@ class UTXO:
         """Return raw signed transaction"""
         type_map = {'p2wsh': gacommon.SEGWIT, 'p2sh': 0}
         txdata = {
-            'prevout_scripts': [self.witness.redeem_script_hex, ],
-            'prevout_script_types': [type_map[self.witness.type_], ],
-            'prevout_values': [self.tx.txs_out[self.vout].coin_value, ],
+            'prevout_scripts': [self.witness.redeem_script_hex],
+            'prevout_script_types': [type_map[self.witness.type_]],
+            'prevout_values': [wally.tx_get_output_satoshi(self.tx, self.vout)]
         }
         signatories = [gacommon.ActiveSignatory(key) for key in self.keyset.private_keys]
 
@@ -273,23 +250,28 @@ class UTXO:
         signed_no_fee = sign_(fee=1000)
         fee_satoshi = self.get_fee(signed_no_fee)
         signed_fee = sign_(fee=fee_satoshi)
-        return signed_fee.as_hex()
+        return txutil.to_hex(signed_fee)
 
 
 def is_testnet_address(address):
-    try:
-        key = pycoin.key.Key.from_text(address)
-        netcode = key.netcode()
-        return netcode != 'BTC'
-    except pycoin.encoding.EncodingError:
-        return True
+    def is_bytes(s):
+        # In python2 bytes *is* str, so this is never true
+        # In python3 bytes is a type distinct from str
+        return isinstance(s, bytes) and not isinstance(s, str)
+    address = address.decode('ascii') if is_bytes(address) else address
+    version = int(wally.base58check_to_bytes(address)[0])
+    if version == 0x6f or version == 0xc4:
+        return True  # Testnet p2pkh/p2sh
+    if version == 0x00 or version == 0x05:
+        return False  # Mainnet p2pkh/p2sh
+    assert False, 'Unknown address version {}'.format(version)
 
 
 class TwoOfThree(object):
 
     def __init__(self, mnemonic, wallet, backup_wallet, custom_xprv):
         self.mnemonic = mnemonic
-        self.wallets = [wallet, ]
+        self.wallets = [wallet]
         self.custom_xprv = custom_xprv
 
         if backup_wallet:
@@ -330,7 +312,7 @@ class TwoOfThree(object):
                 })
         logging.info('Importing {} derived addresses into bitcoind'.format(len(requests)))
         result = core.importmulti(requests)
-        expected_result = [{'success': True}, ] * len(requests)
+        expected_result = [{'success': True}] * len(requests)
         if result != expected_result:
             logging.warning('Unexpected result from importmulti')
             logging.warning('Expected: {}'.format(expected_result))
@@ -363,12 +345,11 @@ class TwoOfThree(object):
                          format(keyset.subaccount, keyset.pointer, txid,
                                 witness.type_))
             logging.debug("found raw={}".format(raw_tx))
-            tx_ = Tx.from_hex(raw_tx)
             utxo = UTXO(
                 keyset,
                 witness.type_,
                 txvout,
-                tx_,
+                txutil.from_hex(raw_tx),
                 dest_address,
             )
             utxos.append(utxo)
@@ -395,7 +376,7 @@ class TwoOfThree(object):
         else:
             assert clargs.args.ga_xpub
             xpub = bip32_key_from_base58check(clargs.args.ga_xpub)
-            keyset_factories = [self._derived_keyset(xpub), ]
+            keyset_factories = [self._derived_keyset(xpub)]
 
         return [DerivedKeySet(pointer)
                 for DerivedKeySet in keyset_factories
@@ -436,5 +417,4 @@ class TwoOfThree(object):
             clargs.args.key_search_depth,
             clargs.args.search_subaccounts or 0)
 
-        raw_txs = self.sign_utxos()
-        return [Tx.from_hex(raw_tx) for raw_tx in raw_txs]
+        return [(txutil.from_hex(tx), None) for tx in self.sign_utxos()]

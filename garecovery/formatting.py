@@ -1,6 +1,8 @@
 """Formatting operations for output of transactions"""
 import collections
 import sys
+import wallycore as wally
+from gaservices.utils import txutil
 
 from . import clargs
 from . import util
@@ -69,7 +71,7 @@ class Formatter:
     def __init__(self, txs):
         # This is a bit of a hack to handle the fact that txs may or may not have private_key
         # attributes and the output needs to handle that dynamically
-        self.has_private_keys = len(txs) and hasattr(txs[0], 'private_key_wif')
+        self.has_private_keys = len(txs) and txs[0][0] is not None
 
         self.units = clargs.args.units
         self.current_blockcount = util.get_current_blockcount()
@@ -84,12 +86,12 @@ class Formatter:
         """
         total = 0
         total_utxos = 0
-        for tx in txs:
-            for txout in tx.txs_out:
-                values = [column.value(tx, txout) for column in summary_columns]
+        for tx_wif in txs:
+            for idx in range(wally.tx_get_num_outputs(tx_wif[0])):
+                values = [column.value(tx_wif, idx) for column in summary_columns]
                 for i, value in enumerate(values):
                     columns[i].append(value)
-                total += txout.coin_value
+                total += wally.tx_get_output_satoshi(tx_wif[0], idx)
                 total_utxos += 1
         return total, total_utxos
 
@@ -126,17 +128,24 @@ class SummaryFormatter(Formatter):
 
     def get_column_defs(self, units, current_blockcount):
 
-        def get_nlocktime(tx, _):
-            return format_nlocktime_string(current_blockcount, tx.lock_time)
+        def get_nlocktime(tx_wif, _):
+            return format_nlocktime_string(current_blockcount, wally.tx_get_locktime(tx_wif[0]))
+
+        def get_coin_value(tx_wif, idx):
+            return btc(wally.tx_get_output_satoshi(tx_wif[0], idx), units)
+
+        def get_bitcoin_address(tx_wif, idx):
+            addr_versions = [b'\x6f', b'\xc4'] if clargs.args.is_testnet else [b'\x00', b'\x05']
+            return txutil.get_output_address(tx_wif[0], idx, addr_versions)
 
         # A list of (heading, fn) for each column in the summary where fn is a function that takes
-        # (tx, txout) and returns a value for the column
+        # (tx, txout index) and returns a value for the column
         columns = [
-            ('tx id', lambda tx, txout: tx.id()),
+            ('tx id', lambda tx_wif, _: txutil.get_txhash_hex(tx_wif[0])),
             ('lock time', get_nlocktime),
-            ('total out', lambda tx, _: btc(tx.total_out(), units)),
-            ('destination address', lambda _, txout: txout.bitcoin_address()),
-            ('coin value', lambda _, txout: btc(txout.coin_value, units)),
+            ('total out', lambda tx_wif, _: btc(txutil.total_output_satoshi(tx_wif[0]), units)),
+            ('destination address', get_bitcoin_address),
+            ('coin value', get_coin_value)
         ]
         return [Column(heading, fn) for heading, fn in columns]
 
@@ -175,13 +184,15 @@ class CsvFormatter(SummaryFormatter):
         Contains either the raw transaction in hex or a string indicating dust output. Transactions
         where value is <= 0 are shown as dust.
         """
-        def get_raw_tx_or_dust(tx, txout):
-            return '** dust **' if tx.total_out() == 0 else tx.as_hex()
+        def get_raw_tx_or_dust(tx_wif, _):
+            if txutil.total_output_satoshi(tx_wif[0]) == 0:
+                return '** dust **'
+            return txutil.to_hex(tx_wif[0])
         return Column('raw tx', get_raw_tx_or_dust)
 
     @staticmethod
     def get_private_keys_column():
-        return Column('private key', lambda tx, _: tx.private_key_wif)
+        return Column('private key', lambda tx_wif, _: tx_wif[1])
 
     def get_column_defs(self, units, current_blockcount):
         defs = SummaryFormatter.get_column_defs(self, units, current_blockcount)

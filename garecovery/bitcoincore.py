@@ -8,8 +8,6 @@ from . import exceptions
 
 import bitcoinrpc.authproxy
 
-import pycoin.networks.default
-
 
 class AuthServiceProxy(bitcoinrpc.authproxy.AuthServiceProxy):
     """Part of workaround for inflexible authentication
@@ -84,17 +82,14 @@ class Connection:
         except:
             return None
 
-    def __init__(self, options):
-        # FIXME: This is not the right place for this
-        testnet = pycoin.networks.default.get_current_netcode() == 'XTN'
-
+    def __init__(self, args):
         # Read from rpc params from config file
         keys = ['rpcuser', 'rpcpassword', 'rpcconnect', 'rpcport', 'rpccookiefile']
-        config = Connection.read_config(keys, options)
+        config = Connection.read_config(keys, args)
 
         # Override with command line options
         for key in keys:
-            override = getattr(options, key, None)
+            override = getattr(args, key, None)
             if override:
                 config[key] = override
         logging.debug('config: {}'.format(config))
@@ -105,13 +100,13 @@ class Connection:
                 True: 18332,
                 False: 8332,
             }
-            config['rpcport'] = default_rpc_ports[testnet]
+            config['rpcport'] = default_rpc_ports[args.is_testnet]
             logging.info('Defaulting rpc port to {}'.format(config['rpcport']))
 
         # connect to core
         try:
             try:
-                http_auth_header = Connection.get_http_auth_header(config, testnet)
+                http_auth_header = Connection.get_http_auth_header(config, args.is_testnet)
                 hostname = config['rpcconnect']
                 port = config['rpcport']
             except KeyError as e:
@@ -122,7 +117,7 @@ class Connection:
             # Passing x:y@ here as a hack because the authentication header is going to
             # be replaced anyway
             connstr = "http://x:y@{}:{}".format(hostname, port)
-            timeout = 60*options.rpc_timeout_minutes
+            timeout = 60 * args.rpc_timeout_minutes
             self.rpc = AuthServiceProxy(connstr, http_auth_header, timeout=timeout)
             logging.info('HTTP timeout set to {}s'.format(timeout))
 

@@ -3,19 +3,15 @@ from io import BytesIO
 
 import base64
 
-from pycoin.encoding import to_bytes_32
-from pycoin.tx.Tx import Tx, SIGHASH_ALL
-
-from gaservices.utils.btc_ import tx_segwit_hash
-from gaservices.utils import inscript
-from wallycore import *
+from gaservices.utils import txutil
+import wallycore as wally
 
 
 def _fernet_decrypt(key, data):
-    assert hmac_sha256(key[:16], data[:-32]) == data[-32:]
+    assert wally.hmac_sha256(key[:16], data[:-32]) == data[-32:]
     res = bytearray(len(data[25:-32]))
-    written = aes_cbc(key[16:], data[9:25], data[25:-32], AES_FLAG_DECRYPT, res)
-    assert written <= len(res) and len(res) - written <= AES_BLOCK_LEN
+    written = wally.aes_cbc(key[16:], data[9:25], data[25:-32], wally.AES_FLAG_DECRYPT, res)
+    assert written <= len(res) and len(res) - written <= wally.AES_BLOCK_LEN
     return res[:written]
 
 
@@ -46,7 +42,8 @@ def _unzip(data, key):
 def private_key_to_wif(key, testnet):
     ver = b'\xef' if testnet else b'\x80'
     compressed = b'\x01'
-    return base58check_from_bytes(ver + bip32_key_get_priv_key(key) + compressed,)
+    priv_key = wally.bip32_key_get_priv_key(key)
+    return wally.base58check_from_bytes(ver + priv_key + compressed)
 
 
 P2SH_P2WSH_FORTIFIED_OUT = SEGWIT = 14
@@ -60,9 +57,9 @@ class PassiveSignatory:
     """
 
     def __init__(self, signature):
-        self.signature = signature
+        self.signature = wally.ec_sig_from_der(signature[:-1])
 
-    def get_signature(self, sighash):
+    def get_signature(self, preimage_hash):
         return self.signature
 
 
@@ -72,52 +69,55 @@ class ActiveSignatory:
     def __init__(self, key):
         self.key = key
 
-    def get_signature(self, sighash):
-        sig = ec_sig_from_bytes(self.key, sighash, EC_FLAG_ECDSA)
-        signature = ec_sig_to_der(sig) + bytearray([SIGHASH_ALL, ])
-        return signature
+    def get_signature(self, preimage_hash):
+        return wally.ec_sig_from_bytes(self.key, preimage_hash, wally.EC_FLAG_ECDSA)
+
+
+def _to_der(sig):
+    return wally.ec_sig_to_der(sig) + bytearray([wally.WALLY_SIGHASH_ALL])
 
 
 def sign(txdata, signatories):
-    tx = Tx.from_hex(txdata['tx'])
-    for prevout_index, txin in enumerate(tx.txs_in):
-
-        script = hex_to_bytes(txdata['prevout_scripts'][prevout_index])
-        script_type = txdata['prevout_script_types'][prevout_index]
-
-        if script_type == SEGWIT:
-            value = int(txdata['prevout_values'][prevout_index])
-            sighash = tx_segwit_hash(tx, prevout_index, script, value)
-        else:
-            sighash = to_bytes_32(tx.signature_hash(script, prevout_index, SIGHASH_ALL))
-
-        signatures = [signatory.get_signature(sighash) for signatory in signatories]
+    tx = txutil.from_hex(txdata['tx'])
+    for i in range(wally.tx_get_num_inputs(tx)):
+        script = wally.hex_to_bytes(txdata['prevout_scripts'][i])
+        script_type = txdata['prevout_script_types'][i]
+        flags, value, sighash = 0, 0, wally.WALLY_SIGHASH_ALL
 
         if script_type == SEGWIT:
-            tx.set_witness(prevout_index, [b'', ] + signatures + [script, ])
-            txin.script = inscript.witness(script)
+            flags = wally.WALLY_TX_FLAG_USE_WITNESS
+            value = int(txdata['prevout_values'][i])
+        preimage_hash = wally.tx_get_btc_signature_hash(tx, i, script, value, sighash, flags)
+
+        sigs = [s.get_signature(preimage_hash) for s in signatories]
+
+        if script_type == SEGWIT:
+            txutil.set_witness(tx, i, [None, _to_der(sigs[0]), _to_der(sigs[1]), script])
+            flags = wally.WALLY_SCRIPT_SHA256 | wally.WALLY_SCRIPT_AS_PUSH
+            script = wally.witness_program_from_bytes(script, flags)
         else:
-            txin.script = inscript.multisig(script, signatures)
+            sigs = sigs[0] + sigs[1]
+            script = wally.scriptsig_multisig_from_bytes(script, sigs, [sighash, sighash], 0)
+        wally.tx_set_input_script(tx, i, script)
 
     return tx
 
 
 def countersign(txdata, private_key):
-    GreenAddress = PassiveSignatory(hex_to_bytes(txdata['prevout_signatures'][0]))
-    user = ActiveSignatory(bip32_key_get_priv_key(private_key))
+    GreenAddress = PassiveSignatory(wally.hex_to_bytes(txdata['prevout_signatures'][0]))
+    user = ActiveSignatory(wally.bip32_key_get_priv_key(private_key))
     return sign(txdata, [GreenAddress, user])
 
 
 def derive_hd_key(root, path, flags=0):
-    return bip32_key_from_parent_path(root, path, flags | BIP32_FLAG_SKIP_HASH)
+    return wally.bip32_key_from_parent_path(root, path, flags | wally.BIP32_FLAG_SKIP_HASH)
 
 
 def get_subaccount_path(subaccount):
     if subaccount == 0:
         return []
-    else:
-        HARDENED = 0x80000000
-        return [HARDENED | 3, HARDENED | subaccount]
+    HARDENED = 0x80000000
+    return [HARDENED | 3, HARDENED | subaccount]
 
 
 def derive_user_private_key(txdata, wallet, branch):

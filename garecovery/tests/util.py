@@ -4,8 +4,6 @@ import os
 import sys
 import unittest
 
-from pycoin.tx.Tx import Tx
-
 try:
     # Python 2
     import StringIO as io
@@ -15,6 +13,8 @@ except ImportError:
 
 from garecovery.recoverycli import main
 from garecovery import clargs
+from gaservices.utils import txutil
+import wallycore as wally
 
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -149,26 +149,22 @@ def get_output(args, expect_error=False):
             return '\n'.join(lines)
 
 
-def pycoin_verify_txs(txs, utxos, expect_witness):
+def verify_txs(txs, utxos, expect_witness):
 
-    txs = [Tx.from_hex(tx) for tx in txs]
+    txs = [txutil.from_hex(tx) for tx in txs]
 
     for tx in txs:
-        txs_in = tx.txs_in
-        assert len(txs_in) == 1
-        txin = txs_in[0]
+        assert wally.tx_get_num_inputs(tx) == 1
+        assert wally.tx_get_num_outputs(tx) >= 1
         if expect_witness:
-            assert len(txin.witness) > 1
-            assert tx.has_witness_data()
+            assert wally.tx_get_witness_count(tx) == 1
         else:
-            assert txin.witness == ()
-            assert not tx.has_witness_data()
+            assert wally.tx_get_witness_count(tx) == 0
+        # FIXME: Enable with wally 0.6.1
+        # wally.tx_get_total_output_satoshi(tx)  # Throws if total overflows
 
     assert len(utxos) > 0
     for idx, utxo in enumerate(utxos):
-        utxo = ''.join(utxo.split())
         tx = txs[idx]
-        txout = Tx.from_hex(utxo).txs_out[:1]
-        tx.set_unspents(txout)
-        tx.check()
-        assert tx.bad_signature_count() == 0
+        spending_tx = txutil.from_hex(''.join(utxo.split()))
+        # FIXME: Test that spending_tx is signed correctly

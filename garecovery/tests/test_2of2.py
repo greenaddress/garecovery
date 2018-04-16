@@ -184,7 +184,7 @@ def test_standard_result():
     assert private_key_wif == 'cNVkei2ZVzQLGNTeewPoRZ1hh1jGdt8M5b1GgcJDtWDm1bjjL4Kk'
 
 
-def _pycoin_verify(mnemonic_filename, nlocktimes_filename, expect_witness, utxos):
+def _verify(mnemonic_filename, nlocktimes_filename, expect_witness, utxos):
     output = get_output([
         '--mnemonic-file={}'.format(datafile(mnemonic_filename)),
         '2of2',
@@ -194,10 +194,10 @@ def _pycoin_verify(mnemonic_filename, nlocktimes_filename, expect_witness, utxos
     outputs = [output.split() for output in output.strip().split("\n")]
     txs = [tx for tx, _ in outputs]
 
-    pycoin_verify_txs(txs, utxos, expect_witness)
+    verify_txs(txs, utxos, expect_witness)
 
 
-def test_pycoin_verify_segwit():
+def test_verify_segwit():
     utxos = [
         # 1105ee5881ebbb3be09ca084800b1ea75a10ed5e2e900b32e40b9c89b1828381
         """0100000000010117b0bac3c5f292d142793a6ec500b9829b7d9114db9a8147ab8ccb7
@@ -219,7 +219,7 @@ dcb010000006b483045022100b0f3d40cf5f4abaa7de7b056e9d96b9b35e25fbfaa9e68d5cb5ac83
 6a914814d160ef5b406831a24f68c436924239f75c78188ac00000000""",
     ]
 
-    _pycoin_verify(
+    _verify(
         'mnemonic_5.txt',
         'nlocktimes_2.zip',
         True,
@@ -227,8 +227,8 @@ dcb010000006b483045022100b0f3d40cf5f4abaa7de7b056e9d96b9b35e25fbfaa9e68d5cb5ac83
         )
 
 
-def test_pycoin_verify_nonsegwit():
-    _pycoin_verify(
+def test_verify_nonsegwit():
+    _verify(
         'mnemonic_6.txt',
         'nlocktimes_3.zip',
         False,

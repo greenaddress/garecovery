@@ -1,19 +1,10 @@
 import struct
-import sys
 
-from wallycore import *
+import wallycore as wally
 
 from . import exceptions
 
-if sys.version_info.major > 2:
-    xrange = range
-
-
 HARDENED = 0x80000000
-
-BIP32_VER_PUBLIC = 0
-BIP32_VER_PRIVATE = 1
-
 
 ga_key_data = {
     'main': {
@@ -29,18 +20,18 @@ ga_key_data = {
 
 def get_bip32_pubkey(chaincode, key, testnet):
     """Return a bip32 public key which can be either mainnet or testnet"""
-    ver = BIP32_VER_TEST_PUBLIC if testnet else BIP32_VER_MAIN_PUBLIC
+    ver = wally.BIP32_VER_TEST_PUBLIC if testnet else wally.BIP32_VER_MAIN_PUBLIC
     public_key = key
     private_key = None
-    return bip32_key_init(ver, 0, 0, chaincode, public_key, private_key, None, None)
+    return wally.bip32_key_init(ver, 0, 0, chaincode, public_key, private_key, None, None)
 
 
 def get_ga_root_key(testnet):
     """Return the GreenAddress root public key for the given network, or as set by options"""
     net = 'test' if testnet else 'main'
     return get_bip32_pubkey(
-        hex_to_bytes(ga_key_data[net]['chaincode']),
-        hex_to_bytes(ga_key_data[net]['pubkey']),
+        wally.hex_to_bytes(ga_key_data[net]['chaincode']),
+        wally.hex_to_bytes(ga_key_data[net]['pubkey']),
         testnet,
     )
 
@@ -50,12 +41,12 @@ def derive_ga_xpub(gait_path, subaccount, testnet):
     ga_root_key = get_ga_root_key(testnet)
     if subaccount is not None:
         branch = 3
-        ga_path = [branch, ] + gait_path + [subaccount, ]
+        ga_path = [branch] + gait_path + [subaccount]
     else:
         branch = 1
-        ga_path = [branch, ] + gait_path
-    flags = BIP32_FLAG_KEY_PUBLIC | BIP32_FLAG_SKIP_HASH
-    return bip32_key_from_parent_path(ga_root_key, ga_path, flags)
+        ga_path = [branch] + gait_path
+    flags = wally.BIP32_FLAG_KEY_PUBLIC | wally.BIP32_FLAG_SKIP_HASH
+    return wally.bip32_key_from_parent_path(ga_root_key, ga_path, flags)
 
 
 def get_gait_path(path_input):
@@ -64,15 +55,15 @@ def get_gait_path(path_input):
     The input string depends on the derivation mechanism
     """
     GA_KEY = bytearray('GreenAddress.it HD wallet path', 'ascii')
-    path = hmac_sha512(GA_KEY, path_input)
+    path = wally.hmac_sha512(GA_KEY, path_input)
     return [struct.unpack('!H',
-            path[i * 2:(i + 1) * 2])[0] for i in xrange(len(path) // 2)]
+            path[i * 2:(i + 1) * 2])[0] for i in range(len(path) // 2)]
 
 
 def gait_path_from_mnemonic(mnemonic):
     """Get the standard path for deriving the GreenAddress xpub from the mnemonic"""
     GA_PATH = bytearray('greenaddress_path', 'ascii')
-    derived512 = pbkdf2_hmac_sha512(bytearray(mnemonic, "ascii"), GA_PATH, 0, 2048)
+    derived512 = wally.pbkdf2_hmac_sha512(bytearray(mnemonic, "ascii"), GA_PATH, 0, 2048)
     return get_gait_path(derived512)
 
 
@@ -84,22 +75,23 @@ def gait_paths_from_seed(seed):
 
     Returns two possible paths corresponding to two different client implementations.
     """
-    assert len(seed) == BIP39_SEED_LEN_512
+    assert len(seed) == wally.BIP39_SEED_LEN_512
 
     # Passing version=BIP32_VER_MAIN_PRIVATE here although it may be either MAIN or TEST
     # This version indicator only matters if you serialize the key
-    root_key = bip32_key_from_seed(seed, BIP32_VER_MAIN_PRIVATE, BIP32_FLAG_SKIP_HASH)
+    version = wally.BIP32_VER_MAIN_PRIVATE
+    root_key = wally.bip32_key_from_seed(seed, version, wally.BIP32_FLAG_SKIP_HASH)
 
     # path = m/18241'
     # 18241 = 0x4741 = 'GA'
-    flags = BIP32_FLAG_KEY_PUBLIC | BIP32_FLAG_SKIP_HASH
-    derived_public_key = bip32_key_from_parent_path(root_key, [HARDENED | 18241, ], flags)
-    chain_code = bip32_key_get_chain_code(derived_public_key)
-    pub_key = bip32_key_get_pub_key(derived_public_key)
+    flags = wally.BIP32_FLAG_KEY_PUBLIC | wally.BIP32_FLAG_SKIP_HASH
+    derived_public_key = wally.bip32_key_from_parent_path(root_key, [HARDENED | 18241], flags)
+    chain_code = wally.bip32_key_get_chain_code(derived_public_key)
+    pub_key = wally.bip32_key_get_pub_key(derived_public_key)
 
     # For historic reasons some old clients use a hexlified input path here - generate both
     path_input = chain_code + pub_key
-    path_input_hex = bytearray(hex_from_bytes(chain_code + pub_key), 'ascii')
+    path_input_hex = bytearray(wally.hex_from_bytes(chain_code + pub_key), 'ascii')
     return [get_gait_path(path_input) for path_input in [path_input, path_input_hex]]
 
 
@@ -108,12 +100,11 @@ def xpubs_from_mnemonic(mnemonic, subaccount, testnet):
     if mnemonic is None:
         msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
         raise exceptions.NeedMnemonicOrGaXPub(msg)
-    # Get the original wallet path
     gait_path = gait_path_from_mnemonic(mnemonic)
 
     # Include the new derivations for newer wallets and hardware mnemonics
-    written, seed = bip39_mnemonic_to_seed512(mnemonic, None)
-    assert written == BIP39_SEED_LEN_512
+    written, seed = wally.bip39_mnemonic_to_seed512(mnemonic, None)
+    assert written == wally.BIP39_SEED_LEN_512
 
     gait_paths = [gait_path] + gait_paths_from_seed(seed)
     return [derive_ga_xpub(gait_path, subaccount, testnet) for gait_path in gait_paths]

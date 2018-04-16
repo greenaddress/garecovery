@@ -2,12 +2,10 @@ import logging
 import json
 import sys
 
-from pycoin.tx.Tx import Tx
-from pycoin.tx.TxIn import TxIn
 from pycoin.tx.script.tools import disassemble
 
-from gaservices.utils import gacommon
-from wallycore import *
+from gaservices.utils import gacommon, txutil
+import wallycore as wally
 
 from . import clargs
 from . import exceptions
@@ -22,8 +20,9 @@ class TwoOfTwo:
 
         self.mnemonic = mnemonic
         self.seed = seed
-        self.wallet = bip32_key_from_seed(self.seed, BIP32_VER_MAIN_PRIVATE, BIP32_FLAG_SKIP_HASH)
-        chaincode = bip32_key_get_chain_code(self.wallet)
+        version = wally.BIP32_VER_MAIN_PRIVATE
+        self.wallet = wally.bip32_key_from_seed(self.seed, version, wally.BIP32_FLAG_SKIP_HASH)
+        chaincode = wally.bip32_key_get_chain_code(self.wallet)
 
         zipdata = gacommon._unzip(self.compressed_zip, chaincode)
         if len(zipdata) == 0:
@@ -45,16 +44,17 @@ class TwoOfTwo:
         """
         for txdata in self.txdata:
             if 'prevout_signatures' not in txdata:
-                tx = Tx.from_hex(txdata['tx'])
+                tx = txutil.from_hex(txdata['tx'])
                 NON_SEGWIT_P2SH = 10
-                txdata['prevout_script_types'] = [NON_SEGWIT_P2SH] * len(tx.txs_in)
+                txdata['prevout_script_types'] = []
                 txdata['prevout_signatures'] = []
                 txdata['prevout_scripts'] = []
-                for txin in tx.txs_in:
-                    dis = disassemble(txin.script).split()
+                for i in range(wally.tx_get_num_inputs(tx)):
+                    dis = disassemble(wally.tx_get_input_script(tx, i)).split()
                     _, ga_signature, _, redeem_script = dis
                     txdata['prevout_signatures'].append(ga_signature[1:-1])
                     txdata['prevout_scripts'].append(redeem_script[1:-1])
+                    txdata['prevout_script_types'].append(NON_SEGWIT_P2SH)
 
     def _is_testnet(self):
         """Return true if the GreenAddress xpub for testnet is found in the redeem script
@@ -67,9 +67,8 @@ class TwoOfTwo:
 
         def get_pubkey_for_pointer_hex(xpub):
             """Return hex encoded public key derived from xpub for pointer"""
-            xpub = gacommon.derive_hd_key(xpub, [pointer, ], BIP32_FLAG_KEY_PUBLIC)
-            xpub = bip32_key_get_pub_key(xpub)
-            return hex_from_bytes(xpub)
+            xpub = gacommon.derive_hd_key(xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
+            return wally.hex_from_bytes(wally.bip32_key_get_pub_key(xpub))
 
         def get_pubkeys_hex(fn, key_material, testnet):
             """Return a list of hex-encoded public key given either a seed or a mnemonic"""
@@ -114,6 +113,6 @@ class TwoOfTwo:
         txs = []
         for txdata in self.txdata:
             tx = self._get_signed_tx(txdata)
-            tx.private_key_wif = self._get_private_key_wif(txdata)
-            txs.append(tx)
+            private_key_wif = self._get_private_key_wif(txdata)
+            txs.append((tx, private_key_wif))
         return txs

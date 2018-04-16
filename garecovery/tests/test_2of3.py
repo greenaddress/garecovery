@@ -3,7 +3,6 @@
 import base64
 import binascii
 import decimal
-import io
 import logging
 import math
 import mock
@@ -14,14 +13,14 @@ import sys
 
 import bitcoinrpc
 
-from pycoin.tx.Tx import Tx
-
 import garecovery.recoverycli
 import garecovery.clargs
+from garecovery.two_of_three import SATOSHI_PER_BTC
+from gaservices.utils import txutil
 
-from .util import (datafile, get_output, parse_summary, pycoin_verify_txs, get_argparse_error,
+from .util import (datafile, get_output, parse_summary, verify_txs, get_argparse_error,
                    parse_csv, get_output_ex)
-from garecovery.two_of_three import satoshi_per_btc
+import wallycore as wally
 
 
 # Patch os.path.exists so that it returns False whenever asked if the default output file exists,
@@ -50,14 +49,15 @@ class AuthServiceProxy:
         self.tx_by_id = {}
         self.txout_by_address = {}
         for line in open(datafile(txfile)).readlines():
-            tx = Tx.from_hex(line.strip())
-            self.tx_by_id[tx.id()] = tx
-            for vout, txout in enumerate(tx.txs_out):
-                self.txout_by_address[txout.address('XTN')] = (tx, vout, txout)
+            tx = txutil.from_hex(line.strip())
+            self.tx_by_id[txutil.get_txhash_bin(tx)] = tx
+            for i in range(wally.tx_get_num_outputs(tx)):
+                addr = txutil.get_output_address(tx, i, [b'\x6f', b'\xc4'])
+                self.txout_by_address[addr] = (tx, i)
         self.imported = {}
 
         # This is something of a workaround because all the existing tests are based on generating
-        # txs where nlocktime was fixed as 0. The code changed to use current blockheight , so by
+        # txs where nlocktime was fixed as 0. The code changed to use current blockheight, so by
         # fudging this value to 0 the existing tests don't notice the difference
         self.getblockcount.return_value = 0
 
@@ -75,12 +75,13 @@ class AuthServiceProxy:
         imported = self.imported.get(address, None)
         if imported is None:
             return None
-        tx, vout, txout = imported
+        tx, i = imported
+        script = wally.tx_get_output_script(tx, i)
         return {
-            "txid": tx.id(),
-            "vout": vout,
-            "address": txout.address('XTN'),
-            "scriptPubKey": binascii.hexlify(txout.script).decode("ascii"),
+            "txid": txutil.get_txhash_bin(tx),
+            "vout": i,
+            "address": address,
+            "scriptPubKey": wally.hex_from_bytes(script)
         }
 
     def listunspent(self, minconf, maxconf, addresses):
@@ -88,7 +89,7 @@ class AuthServiceProxy:
         return [x for x in unspent if x]
 
     def getrawtransaction(self, txid):
-        return self.tx_by_id[txid].as_hex()
+        return txutil.to_hex(self.tx_by_id[txid])
 
     def batch_(self, requests):
         return [getattr(self, call)(params) for call, params in requests]
@@ -147,33 +148,21 @@ def expect_feerate(fee_satoshi_byte, args=None, is_segwit=False, amount=None, to
         return
 
     output = get_output(args).strip()
-    output_tx = Tx.from_hex(output)
-    assert len(output_tx.txs_out) == 1
-
-    assert output_tx.has_witness_data() == is_segwit
-
-    # Calculate the expected amount
-    def stream_size(include_witness_data):
-        stream_out = io.BytesIO()
-        output_tx.stream(stream_out, include_witness_data=include_witness_data)
-        return len(stream_out.getvalue())
-    base_tx_size = stream_size(include_witness_data=False)
-    total_tx_size = stream_size(include_witness_data=True)
+    output_tx = txutil.from_hex(output)
+    assert wally.tx_get_num_outputs(output_tx) == 1
     if is_segwit:
-        assert total_tx_size > base_tx_size
+        assert wally.tx_get_witness_count(output_tx) > 0
     else:
-        assert total_tx_size == base_tx_size
-    tx_weight = base_tx_size * 3 + total_tx_size
-    virtual_tx_size = int(math.ceil(tx_weight / 4.0))
-    tx_len = virtual_tx_size
+        assert wally.tx_get_witness_count(output_tx) == 0
 
-    expected_fee = decimal.Decimal(fee_satoshi_byte * tx_len)
+    # Calculate the expected fee
+    expected_fee = decimal.Decimal(fee_satoshi_byte * wally.tx_get_vsize(output_tx))
 
     # The amount of our test tx is a well known value
     if amount is None:
         amount = decimal.Decimal(111110000)
     expected_amount = amount - expected_fee
-    actual_amount = output_tx.txs_out[0].coin_value
+    actual_amount = wally.tx_get_output_satoshi(output_tx, 0)
 
     if expected_amount <= 0:
         # If expected amount is negative then the fee exceeds the amount
@@ -193,7 +182,7 @@ def _fee_estimate_test(mock_bitcoincore, fee_satoshi_byte, too_big=False):
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
 
     fee_satoshi_kb = fee_satoshi_byte * 1000
-    fee_btc_kb = fee_satoshi_kb / satoshi_per_btc
+    fee_btc_kb = fee_satoshi_kb / SATOSHI_PER_BTC
 
     estimate = {'blocks': 3, 'feerate': fee_btc_kb, }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
@@ -232,7 +221,7 @@ def test_fee_calculation_segwit(mock_bitcoincore):
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
     fee_satoshi_byte = 300
     fee_satoshi_kb = decimal.Decimal(fee_satoshi_byte) * 1000
-    fee_btc_kb = fee_satoshi_kb / satoshi_per_btc
+    fee_btc_kb = fee_satoshi_kb / SATOSHI_PER_BTC
     estimate = {'blocks': 3, 'feerate': fee_btc_kb, }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
@@ -354,9 +343,9 @@ def test_recover_2of3(mock_bitcoincore):
     assert output == open(datafile("signed_2of3_5")).read().strip()
 
     # Check replace by fee is set
-    tx = Tx.from_hex(output)
-    assert len(tx.txs_in) == 1
-    assert tx.txs_in[0].sequence == int(32*'1', 2) - 2
+    tx = txutil.from_hex(output)
+    assert wally.tx_get_num_inputs(tx) == 1
+    assert wally.tx_get_input_sequence(tx, 0) == int(32*'1', 2) - 2
 
     # Summary
     args = ['--show-summary', ] + args
@@ -390,8 +379,8 @@ def test_set_nlocktime(mock_bitcoincore):
     ]
 
     output = get_output(args).strip()
-    tx = Tx.from_hex(output)
-    assert tx.lock_time == current_blockheight
+    tx = txutil.from_hex(output)
+    assert wally.tx_get_locktime(tx) == current_blockheight
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
@@ -885,8 +874,8 @@ def test_core_daemon_not_available():
         assert "Failed to connect" in output
 
 
-def _pycoin_verify(mnemonic_filename, recovery_mnemonic_filename, utxos, expect_witness):
-    """Use pycoin to verify tx signatures"""
+def _verify(mnemonic_filename, recovery_mnemonic_filename, utxos, expect_witness):
+    """Verify tx signatures"""
     destination_address = 'mrZ98U4Vibu9hBMdcdrY5sXpC9Grr3Whpx'
     output = get_output([
         '--rpcuser=abc',
@@ -902,11 +891,11 @@ def _pycoin_verify(mnemonic_filename, recovery_mnemonic_filename, utxos, expect_
 
     txs = [output for output in output.strip().split("\n")]
     assert len(txs) == 1
-    pycoin_verify_txs(txs, utxos, expect_witness)
+    verify_txs(txs, utxos, expect_witness)
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
-def test_pycoin_verify_nonsegwit(mock_bitcoincore):
+def test_verify_nonsegwit(mock_bitcoincore):
     """Sign a non-segwit tx and check signatures"""
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
 
@@ -923,7 +912,7 @@ def test_pycoin_verify_nonsegwit(mock_bitcoincore):
 6a9143a3b7fb9fd7438a83d20d6f8244d6e3bb4daa28688ac00000000""",
     ]
 
-    _pycoin_verify(
+    _verify(
         'mnemonic_6.txt',
         'mnemonic_7.txt',
         utxos,
@@ -932,7 +921,7 @@ def test_pycoin_verify_nonsegwit(mock_bitcoincore):
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
-def test_pycoin_verify_segwit(mock_bitcoincore):
+def test_verify_segwit(mock_bitcoincore):
     """Sign a segwit tx and check signatures"""
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
 
@@ -949,7 +938,7 @@ def test_pycoin_verify_segwit(mock_bitcoincore):
 976a914093cc1bb39c19264ea29f713ce6d7ef67c73a35288ac00000000""",
     ]
 
-    _pycoin_verify(
+    _verify(
         'mnemonic_8.txt',
         'mnemonic_9.txt',
         utxos,
