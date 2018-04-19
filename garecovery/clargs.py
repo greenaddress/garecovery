@@ -18,10 +18,6 @@ DEFAULT_FEE_ESTIMATE_BLOCKS = 6
 DEFAULT_OFILE = 'garecovery.csv'
 
 
-def default_tx_cache_filename():
-    return os.path.expanduser('~/.garecovery_txcache')
-
-
 args = None
 
 
