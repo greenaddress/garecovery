@@ -2,7 +2,7 @@
 import collections
 import sys
 import wallycore as wally
-from gaservices.utils import txutil
+from gaservices.utils import gaconstants, txutil
 
 from . import clargs
 from . import util
@@ -135,7 +135,7 @@ class SummaryFormatter(Formatter):
             return btc(wally.tx_get_output_satoshi(tx_wif[0], idx), units)
 
         def get_bitcoin_address(tx_wif, idx):
-            addr_versions = [b'\x6f', b'\xc4'] if clargs.args.is_testnet else [b'\x00', b'\x05']
+            addr_versions = gaconstants.get_address_versions(clargs.args.is_testnet)
             return txutil.get_output_address(tx_wif[0], idx, addr_versions)
 
         # A list of (heading, fn) for each column in the summary where fn is a function that takes

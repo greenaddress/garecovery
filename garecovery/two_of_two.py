@@ -4,7 +4,7 @@ import sys
 
 from pycoin.tx.script.tools import disassemble
 
-from gaservices.utils import gacommon, txutil
+from gaservices.utils import gacommon, gaconstants, txutil
 import wallycore as wally
 
 from . import clargs
@@ -45,7 +45,6 @@ class TwoOfTwo:
         for txdata in self.txdata:
             if 'prevout_signatures' not in txdata:
                 tx = txutil.from_hex(txdata['tx'])
-                NON_SEGWIT_P2SH = 10
                 txdata['prevout_script_types'] = []
                 txdata['prevout_signatures'] = []
                 txdata['prevout_scripts'] = []
@@ -54,7 +53,7 @@ class TwoOfTwo:
                     _, ga_signature, _, redeem_script = dis
                     txdata['prevout_signatures'].append(ga_signature[1:-1])
                     txdata['prevout_scripts'].append(redeem_script[1:-1])
-                    txdata['prevout_script_types'].append(NON_SEGWIT_P2SH)
+                    txdata['prevout_script_types'].append(gaconstants.P2SH_FORTIFIED_OUT)
 
     def _is_testnet(self):
         """Return true if the GreenAddress xpub for testnet is found in the redeem script

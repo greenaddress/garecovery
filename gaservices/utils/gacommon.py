@@ -3,7 +3,7 @@ from io import BytesIO
 
 import base64
 
-from gaservices.utils import txutil
+from . import gaconstants, txutil
 import wallycore as wally
 
 
@@ -46,9 +46,6 @@ def private_key_to_wif(key, testnet):
     return wally.base58check_from_bytes(ver + priv_key + compressed)
 
 
-P2SH_P2WSH_FORTIFIED_OUT = SEGWIT = 14
-
-
 class PassiveSignatory:
     """Represent a signatory for which the keys are not known, only the signature
 
@@ -84,14 +81,14 @@ def sign(txdata, signatories):
         script_type = txdata['prevout_script_types'][i]
         flags, value, sighash = 0, 0, wally.WALLY_SIGHASH_ALL
 
-        if script_type == SEGWIT:
+        if script_type == gaconstants.P2SH_P2WSH_FORTIFIED_OUT:
             flags = wally.WALLY_TX_FLAG_USE_WITNESS
             value = int(txdata['prevout_values'][i])
         preimage_hash = wally.tx_get_btc_signature_hash(tx, i, script, value, sighash, flags)
 
         sigs = [s.get_signature(preimage_hash) for s in signatories]
 
-        if script_type == SEGWIT:
+        if script_type == gaconstants.P2SH_P2WSH_FORTIFIED_OUT:
             txutil.set_witness(tx, i, [None, _to_der(sigs[0]), _to_der(sigs[1]), script])
             flags = wally.WALLY_SCRIPT_SHA256 | wally.WALLY_SCRIPT_AS_PUSH
             script = wally.witness_program_from_bytes(script, flags)
@@ -116,8 +113,7 @@ def derive_hd_key(root, path, flags=0):
 def get_subaccount_path(subaccount):
     if subaccount == 0:
         return []
-    HARDENED = 0x80000000
-    return [HARDENED | 3, HARDENED | subaccount]
+    return [gaconstants.HARDENED | 3, gaconstants.HARDENED | subaccount]
 
 
 def derive_user_private_key(txdata, wallet, branch):

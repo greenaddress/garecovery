@@ -15,8 +15,7 @@ import bitcoinrpc
 
 import garecovery.recoverycli
 import garecovery.clargs
-from garecovery.two_of_three import SATOSHI_PER_BTC
-from gaservices.utils import txutil
+from gaservices.utils import gaconstants, txutil
 
 from .util import (datafile, get_output, parse_summary, verify_txs, get_argparse_error,
                    parse_csv, get_output_ex)
@@ -52,7 +51,7 @@ class AuthServiceProxy:
             tx = txutil.from_hex(line.strip())
             self.tx_by_id[txutil.get_txhash_bin(tx)] = tx
             for i in range(wally.tx_get_num_outputs(tx)):
-                addr = txutil.get_output_address(tx, i, [b'\x6f', b'\xc4'])
+                addr = txutil.get_output_address(tx, i, gaconstants.ADDR_VERSIONS_TESTNET)
                 self.txout_by_address[addr] = (tx, i)
         self.imported = {}
 
@@ -182,7 +181,7 @@ def _fee_estimate_test(mock_bitcoincore, fee_satoshi_byte, too_big=False):
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
 
     fee_satoshi_kb = fee_satoshi_byte * 1000
-    fee_btc_kb = fee_satoshi_kb / SATOSHI_PER_BTC
+    fee_btc_kb = fee_satoshi_kb / gaconstants.SATOSHI_PER_BTC
 
     estimate = {'blocks': 3, 'feerate': fee_btc_kb, }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
@@ -221,7 +220,7 @@ def test_fee_calculation_segwit(mock_bitcoincore):
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
     fee_satoshi_byte = 300
     fee_satoshi_kb = decimal.Decimal(fee_satoshi_byte) * 1000
-    fee_btc_kb = fee_satoshi_kb / SATOSHI_PER_BTC
+    fee_btc_kb = fee_satoshi_kb / gaconstants.SATOSHI_PER_BTC
     estimate = {'blocks': 3, 'feerate': fee_btc_kb, }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 

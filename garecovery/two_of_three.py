@@ -8,7 +8,7 @@ import time
 
 import pycoin.ui
 
-from gaservices.utils import gacommon, txutil
+from gaservices.utils import gacommon, gaconstants, txutil
 
 import wallycore as wally
 
@@ -17,15 +17,6 @@ from . import clargs
 from . import exceptions
 from . import ga_xpub
 from . import util
-
-
-SATOSHI_PER_BTC = decimal.Decimal(1e8)
-
-
-HARDENED = 0x80000000
-
-
-MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 
 
 def get_scriptpubkey_hex(redeem_script_hash_hex):
@@ -181,7 +172,7 @@ class UTXO:
             # estimatesmartfee returns -1 to indicate it is unable to provide a fee estimate
             fee_satoshi_byte = self.get_default_feerate()
         else:
-            fee_satoshi_kb = fee_btc_kb * SATOSHI_PER_BTC
+            fee_satoshi_kb = fee_btc_kb * gaconstants.SATOSHI_PER_BTC
             fee_satoshi_byte = round(fee_satoshi_kb / 1000)
 
             logging.debug('feerate = {} BTC/kb'.format(fee_btc_kb))
@@ -208,14 +199,14 @@ class UTXO:
         logging.debug('tx amount = amount - fee = {} - {} = {}'.format(
             amount_satoshi, fee_satoshi, adjusted_amount_satoshi))
         assert adjusted_amount_satoshi >= 0
-        adjusted_amount_btc = decimal.Decimal(adjusted_amount_satoshi) / SATOSHI_PER_BTC
 
         logging.debug("Create tx: {} sat -> {}".format(adjusted_amount_satoshi, self.dest_address))
 
         # Set nlocktime to the current blockheight to discourage 'fee sniping', as per the core
         # wallet implementation
         tx = txutil.new(util.get_current_blockcount() or 0, version=1)
-        txutil.add_input(tx, self.txhash_bin, self.vout, MAX_BIP125_RBF_SEQUENCE)
+        seq = gaconstants.MAX_BIP125_RBF_SEQUENCE
+        txutil.add_input(tx, self.txhash_bin, self.vout, seq)
         scriptPubKey = pycoin.ui.script_obj_from_address(self.dest_address)
         txutil.add_output(tx, adjusted_amount_satoshi, scriptPubKey.script())
         return txutil.to_hex(tx)
@@ -232,7 +223,7 @@ class UTXO:
 
     def sign(self):
         """Return raw signed transaction"""
-        type_map = {'p2wsh': gacommon.SEGWIT, 'p2sh': 0}
+        type_map = {'p2wsh': gaconstants.P2SH_P2WSH_FORTIFIED_OUT, 'p2sh': 0}
         txdata = {
             'prevout_scripts': [self.witness.redeem_script_hex],
             'prevout_script_types': [type_map[self.witness.type_]],
@@ -254,15 +245,10 @@ class UTXO:
 
 
 def is_testnet_address(address):
-    def is_bytes(s):
-        # In python2 bytes *is* str, so this is never true
-        # In python3 bytes is a type distinct from str
-        return isinstance(s, bytes) and not isinstance(s, str)
-    address = address.decode('ascii') if is_bytes(address) else address
-    version = int(wally.base58check_to_bytes(address)[0])
-    if version == 0x6f or version == 0xc4:
+    version = wally.base58check_to_bytes(address)[0]
+    if version in gaconstants.ADDR_VERSIONS_TESTNET:
         return True  # Testnet p2pkh/p2sh
-    if version == 0x00 or version == 0x05:
+    if version in gaconstants.ADDR_VERSIONS_MAINNET:
         return False  # Mainnet p2pkh/p2sh
     assert False, 'Unknown address version {}'.format(version)
 

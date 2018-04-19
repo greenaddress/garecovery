@@ -1,21 +1,9 @@
 import struct
 
+from gaservices.utils import gaconstants
 import wallycore as wally
 
 from . import exceptions
-
-HARDENED = 0x80000000
-
-ga_key_data = {
-    'main': {
-        'chaincode': 'e9a563d68686999af372a33157209c6860fe79197a4dafd9ec1dbaa49523351d',
-        'pubkey': '0322c5f5c9c4b9d1c3e22ca995e200d724c2d7d8b6953f7b38fddf9296053c961f',
-    },
-    'test': {
-        'chaincode': 'b60befcc619bb1c212732770fe181f2f1aa824ab89f8aab49f2e13e3a56f0f04',
-        'pubkey': '036307e560072ed6ce0aa5465534fb5c258a2ccfbc257f369e8e7a181b16d897b3',
-    },
-}
 
 
 def get_bip32_pubkey(chaincode, key, testnet):
@@ -28,11 +16,11 @@ def get_bip32_pubkey(chaincode, key, testnet):
 
 def get_ga_root_key(testnet):
     """Return the GreenAddress root public key for the given network, or as set by options"""
-    net = 'test' if testnet else 'main'
+    key_data = gaconstants.GA_KEY_DATA_TESTNET if testnet else gaconstants.GA_KEY_DATA_MAINNET
     return get_bip32_pubkey(
-        wally.hex_to_bytes(ga_key_data[net]['chaincode']),
-        wally.hex_to_bytes(ga_key_data[net]['pubkey']),
-        testnet,
+        wally.hex_to_bytes(key_data['chaincode']),
+        wally.hex_to_bytes(key_data['pubkey']),
+        testnet
     )
 
 
@@ -85,7 +73,8 @@ def gait_paths_from_seed(seed):
     # path = m/18241'
     # 18241 = 0x4741 = 'GA'
     flags = wally.BIP32_FLAG_KEY_PUBLIC | wally.BIP32_FLAG_SKIP_HASH
-    derived_public_key = wally.bip32_key_from_parent_path(root_key, [HARDENED | 18241], flags)
+    path = [gaconstants.HARDENED | 18241]
+    derived_public_key = wally.bip32_key_from_parent_path(root_key, path, flags)
     chain_code = wally.bip32_key_get_chain_code(derived_public_key)
     pub_key = wally.bip32_key_get_pub_key(derived_public_key)
 
