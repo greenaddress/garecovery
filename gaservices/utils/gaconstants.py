@@ -1,5 +1,8 @@
 """ Constant values for recovery/BTC """
 import decimal
+import sys
+
+PY3 = sys.version_info.major > 2
 
 SATOSHI_PER_BTC = decimal.Decimal(1e8)
 
@@ -8,11 +11,11 @@ MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 # BIP32 hardened derivation flag
 HARDENED = 0x80000000
 
-P2PKH_MAINNET = b'\x00'
-P2SH_MAINNET = b'\x05'
+P2PKH_MAINNET = 0x00
+P2SH_MAINNET = 0x05
 
-P2PKH_TESTNET = b'\x6f'
-P2SH_TESTNET = b'\xc4'
+P2PKH_TESTNET = 0x6f
+P2SH_TESTNET = 0xc4
 
 ADDR_VERSIONS_MAINNET = [P2PKH_MAINNET, P2SH_MAINNET]
 ADDR_VERSIONS_TESTNET = [P2PKH_TESTNET, P2SH_TESTNET]
