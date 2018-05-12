@@ -160,8 +160,7 @@ def verify_txs(txs, utxos, expect_witness):
             assert wally.tx_get_witness_count(tx) == 1
         else:
             assert wally.tx_get_witness_count(tx) == 0
-        # FIXME: Enable with wally 0.6.1
-        # wally.tx_get_total_output_satoshi(tx)  # Throws if total overflows
+        wally.tx_get_total_output_satoshi(tx)  # Throws if total overflows
 
     assert len(utxos) > 0
     for idx, utxo in enumerate(utxos):
