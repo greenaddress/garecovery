@@ -1,16 +1,15 @@
 """ Transaction utility functions """
+from . import gaconstants
 import wallycore as wally
 
-# FIXME: remove unused
-
-if type(b'') is str:
+if gaconstants.PY3:
+    # Python 3
+    def from_hex(tx_hex):
+        return wally.tx_from_hex(tx_hex, wally.WALLY_TX_FLAG_USE_WITNESS)
+else:
     # Python2
     def from_hex(tx_hex):
         return wally.tx_from_hex(tx_hex.encode('ascii'), wally.WALLY_TX_FLAG_USE_WITNESS)
-else:
-    # Python3
-    def from_hex(tx_hex):
-        return wally.tx_from_hex(tx_hex, wally.WALLY_TX_FLAG_USE_WITNESS)
 
 
 def to_hex(tx, use_witness=True):
@@ -50,8 +49,3 @@ def get_output_address(tx, i, versions):
     if script_type == wally.WALLY_SCRIPT_TYPE_P2SH:
         return wally.base58check_from_bytes(bytearray([versions[1]]) + script[2:22])
     assert False
-
-
-def total_output_satoshi(tx):
-    num_outputs = wally.tx_get_num_outputs(tx)
-    return sum(wally.tx_get_output_satoshi(tx, i) for i in range(num_outputs))

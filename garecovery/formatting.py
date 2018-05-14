@@ -134,6 +134,9 @@ class SummaryFormatter(Formatter):
         def get_coin_value(tx_wif, idx):
             return btc(wally.tx_get_output_satoshi(tx_wif[0], idx), units)
 
+        def get_total_value(tx_wif, idx):
+            return btc(wally.tx_get_total_output_satoshi(tx_wif[0]), units)
+
         def get_bitcoin_address(tx_wif, idx):
             addr_versions = gaconstants.get_address_versions(clargs.args.is_testnet)
             return txutil.get_output_address(tx_wif[0], idx, addr_versions)
@@ -143,7 +146,7 @@ class SummaryFormatter(Formatter):
         columns = [
             ('tx id', lambda tx_wif, _: txutil.get_txhash_hex(tx_wif[0])),
             ('lock time', get_nlocktime),
-            ('total out', lambda tx_wif, _: btc(txutil.total_output_satoshi(tx_wif[0]), units)),
+            ('total out', get_total_value),
             ('destination address', get_bitcoin_address),
             ('coin value', get_coin_value)
         ]
@@ -185,7 +188,7 @@ class CsvFormatter(SummaryFormatter):
         where value is <= 0 are shown as dust.
         """
         def get_raw_tx_or_dust(tx_wif, _):
-            if txutil.total_output_satoshi(tx_wif[0]) == 0:
+            if wally.tx_get_total_output_satoshi(tx_wif[0]) == 0:
                 return '** dust **'
             return txutil.to_hex(tx_wif[0])
         return Column('raw tx', get_raw_tx_or_dust)
