@@ -790,7 +790,7 @@ def check_http_auth(HTTPConnection, args, hostname, port, timeout, auth_data):
     ]
 
     # .. and attempted a POST with the correct basic auth header
-    expected_auth = "Basic {}".format(base64.b64encode(auth_data))
+    expected_auth = "Basic {}".format(base64.b64encode(auth_data).decode('utf-8'))
     request_calls = HTTPConnection.return_value.request.call_args_list
     assert request_calls[0][0][3]['Authorization'] == expected_auth
 

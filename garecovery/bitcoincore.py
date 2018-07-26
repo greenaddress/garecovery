@@ -74,7 +74,7 @@ class Connection:
             logging.info('Reading bitcoin authentication cookie from "{}"'.format(rpccookiefile))
             auth_data = open(rpccookiefile, "r").read().strip().encode("ascii")
 
-        return "Basic {}".format(base64.b64encode(auth_data))
+        return "Basic {}".format(base64.b64encode(auth_data).decode('utf-8'))
 
     def __getattr__(self, name):
         try:
