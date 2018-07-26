@@ -80,7 +80,7 @@ test_osx:
     - osx
   script:
     - cd $CI_PROJECT_DIR
-    - virtualenv -p python2 venv
+    - virtualenv -p python venv
     - source venv/bin/activate
     - pip install --upgrade setuptools pip
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
