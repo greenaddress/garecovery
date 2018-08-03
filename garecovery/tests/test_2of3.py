@@ -737,6 +737,27 @@ def test_scan_blockchain(mock_bitcoincore):
     assert txs[0] == open(datafile("signed_2of3_4")).read().strip()
     assert txs[1] == open(datafile("signed_2of3_3")).read().strip()
 
+    # Scan using scantxoutset
+    mock_bitcoincore.return_value.getnetworkinfo = mock.Mock(return_value={'version': 170000})
+    mock_bitcoincore.return_value.scantxoutset = mock.Mock(return_value={
+        'unspents': [{
+            'txid': 'fake_tx_id',
+            'vout': 0,
+            'scriptPubKey': 'a9145100774c0ed205038fa07aeff0eb293c17b650f087',
+            'amount': 0,
+            'height': 0,
+        }],
+        'total_amount': 0
+    })
+
+    # Key depth five matches one tx
+    output = get_output(getargs(key_search_depth=5) + ['--ignore-mempool'])
+    assert output.strip() == open(datafile("signed_2of3_3")).read().strip()
+
+    mock_bitcoincore.return_value.getnetworkinfo = mock.Mock(return_value={'version': 160000})
+    output = get_output(getargs(key_search_depth=5) + ['--ignore-mempool'], expect_error=True)
+    assert '--ignore-mempool cannot be specified if you run an old version' in output
+
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_missing_config_file_no_params(mock_bitcoincore):

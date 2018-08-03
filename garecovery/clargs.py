@@ -158,6 +158,13 @@ def get_args(argv):
         type=int,
         help='Fee rate (satoshis per byte) to use if unable to automatically get one')
 
+    advanced_2of3.add_argument(
+        '--ignore-mempool',
+        dest='ignore_mempool',
+        action='store_true',
+        help='Ignore the mempool when scanning the UTXO set for 2of3 transactions. '
+             'This enables the use of scantxoutset which makes recovery much faster.')
+
     argcomplete.autocomplete(parser)
     result = parser.parse_args(argv[1:])
 

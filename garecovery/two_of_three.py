@@ -281,40 +281,66 @@ class TwoOfThree(object):
         logging.debug("Connecting to bitcoinrpc to scan blockchain")
         core = bitcoincore.Connection(clargs.args)
 
-        logging.info("Scanning from '{}'".format(clargs.args.scan_from))
-        logging.warning('This step may take 10 minutes or more')
+        if core.getnetworkinfo()["version"] == 170000 and clargs.args.ignore_mempool:
+            logging.warning('Mempool transactions are being ignored')
+            # If the node is running version 0.17.0 and
+            # the user does not want to scan the mempool, then use
+            # scantxoutset, otherwise fall back to importmulti + listunspent
+            # FIXME: check for format changes in 0.17.1
 
-        # Need to import our keysets into core so that it will recognise the
-        # utxos we are looking for
-        addresses = []
-        requests = []
-        for keyset in keysets:
-            for witness in keyset.witnesses.values():
-                addresses.append(witness.address)
-                requests.append({
-                    'scriptPubKey': {"address": witness.address},
-                    'timestamp': clargs.args.scan_from,
-                    'watchonly': True,
-                })
-        logging.info('Importing {} derived addresses into bitcoind'.format(len(requests)))
-        result = core.importmulti(requests)
-        expected_result = [{'success': True}] * len(requests)
-        if result != expected_result:
-            logging.warning('Unexpected result from importmulti')
-            logging.warning('Expected: {}'.format(expected_result))
-            logging.warning('Actual: {}'.format(result))
-            raise exceptions.ImportMultiError('Unexpected result from importmulti')
-        logging.info('Successfully imported {} derived addresses'.format(len(result)))
+            scanobjects = []
+            for keyset in keysets:
+                for witness in keyset.witnesses.values():
+                    scanobjects.append('addr({})'.format(witness.address))
+                    # By using the descriptor "addr(<address>)" we do not fully exploit
+                    # the potential of output descriptors (we could delegate the HD
+                    # derivation to core). However, as long as the RPC will be marked as
+                    # experimental, it is better to keep its usage simple.
+            logging.info('Scanning UTXO set for {} derived addresses'.format(len(scanobjects)))
+            all_utxos = core.scantxoutset("start", scanobjects)["unspents"]
+            logging.debug('Unspents: {}'.format(all_utxos))
+        elif not clargs.args.ignore_mempool:
+            logging.info("Scanning from '{}'".format(clargs.args.scan_from))
+            logging.warning('This step may take 10 minutes or more')
 
-        # Scan the blockchain for any utxos with addresses that match the derived keysets
-        logging.info('Getting unspent transactions...')
-        all_utxos = core.listunspent(0, 9999999, addresses)
-        logging.debug('all utxos = {}'.format(all_utxos))
-        logging.info('There are {} unspent transactions'.format(len(all_utxos)))
+            # Need to import our keysets into core so that it will recognise the
+            # utxos we are looking for
+            addresses = []
+            requests = []
+            for keyset in keysets:
+                for witness in keyset.witnesses.values():
+                    addresses.append(witness.address)
+                    requests.append({
+                        'scriptPubKey': {"address": witness.address},
+                        'timestamp': clargs.args.scan_from,
+                        'watchonly': True,
+                    })
+            logging.info('Importing {} derived addresses into bitcoind'.format(len(requests)))
+            result = core.importmulti(requests)
+            expected_result = [{'success': True}] * len(requests)
+            if result != expected_result:
+                logging.warning('Unexpected result from importmulti')
+                logging.warning('Expected: {}'.format(expected_result))
+                logging.warning('Actual: {}'.format(result))
+                raise exceptions.ImportMultiError('Unexpected result from importmulti')
+            logging.info('Successfully imported {} derived addresses'.format(len(result)))
+
+            # Scan the blockchain for any utxos with addresses that match the derived keysets
+            logging.info('Getting unspent transactions...')
+            all_utxos = core.listunspent(0, 9999999, addresses)
+            logging.debug('all utxos = {}'.format(all_utxos))
+            logging.info('There are {} unspent transactions'.format(len(all_utxos)))
+        else:
+            # The flag --ingore-mempool is not intended to ignore the mempool, but just to
+            # make the user aware that `scantxoutset` does not look at mempool transactions.
+            msg = '--ignore-mempool cannot be specified if you run an old version of ' \
+                  'Bitcoin Core (without scantxoutset)'
+            raise exceptions.BitcoinCoreConnectionError(msg)
 
         # Now need to match the returned utxos with the keysets that unlock them
         # This is a rather unfortunate loop because there is no other way to correlate the
-        # results from listunspent with the requests to importmulti
+        # results from listunspent with the requests to importmulti, or infer the order
+        # of the outputs from scantxoutset
         utxos = []
         tx_matches = [(tx['txid'], keyset, witness, tx['vout'])
                       for tx in all_utxos

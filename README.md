@@ -90,6 +90,11 @@ https://blockexplorer.com/tx/send
 https://www.smartbit.com.au/txs/pushtx
 
 ## 2of3 Recovery
+*Note for 0.17 users:* it is now possible to specify `--ignore-mempool`,
+which makes the procedure much faster (by using `scantxoutset`).
+However, as the flag suggests, it does not consider the transactions
+that are still in the mempool.
+
 In the case of 2of3 subaccounts you hold the mnemonics for 2 keys: the
 default key used for day to day spending and a backup key used for recovery.
 Coins held in a 2of3 account can be spent either by signing with your
