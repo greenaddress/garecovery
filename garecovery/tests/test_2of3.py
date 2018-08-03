@@ -62,6 +62,8 @@ class AuthServiceProxy:
         # fudging this value to 0 the existing tests don't notice the difference
         self.getblockcount.return_value = 0
 
+        self.getnetworkinfo.return_value = {'version': 160000}
+
     def importmulti(self, requests):
         result = []
         for request in requests:
@@ -98,6 +100,7 @@ class AuthServiceProxy:
     estimatesmartfee = mock.Mock()
     getblockcount = mock.Mock()
     getnewaddress = mock.Mock()
+    getnetworkinfo = mock.Mock()
 
 
 # Patch open into bitcoincore to return a fixed config file
@@ -641,6 +644,7 @@ def test_prompt_for_both_mnemonics(mock_bitcoincore):
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_importmulti_error(mock_bitcoincore):
     """Test handing of importmulti errors"""
+    mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
     mock_bitcoincore.return_value.importmulti = mock.Mock(return_value=[{'success': False}, ])
 
     destination_address = 'mynHfTyTWyGGB76NBFbfUrTnn8YWQkTJVs'
@@ -923,3 +927,23 @@ def test_verify_segwit(mock_bitcoincore):
         utxos,
         True,
     )
+
+
+@mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
+def test_too_old_version(mock_bitcoincore):
+    """Test handling of a too old version"""
+    mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
+    mock_bitcoincore.return_value.getnetworkinfo = mock.Mock(return_value={'version': 159900})
+
+    destination_address = 'mynHfTyTWyGGB76NBFbfUrTnn8YWQkTJVs'
+    args = [
+        '--mnemonic-file={}'.format(datafile('mnemonic_2.txt')),
+        '2of3',
+        '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
+        '--key-search-depth=5',
+        '--search-subaccounts={}'.format(sub_depth),
+        '--destination-address={}'.format(destination_address),
+    ]
+
+    output = get_output(args, expect_error=True)
+    assert 'Bitcoin Core version too old, minimum supported version 0.16.0' in output

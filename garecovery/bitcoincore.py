@@ -45,6 +45,11 @@ RPC parameter {} not found in config file or command line arguments
 """
 
 
+UNSUPPORTED_VERSION = """\
+Bitcoin Core version too old, minimum supported version 0.16.0
+"""
+
+
 class Connection:
 
     @staticmethod
@@ -122,9 +127,11 @@ class Connection:
             self.rpc = AuthServiceProxy(connstr, http_auth_header, timeout=timeout)
             logging.info('HTTP timeout set to {}s'.format(timeout))
 
-            logging.info('Calling getblockcount to confirm connection')
-            blockcount = self.rpc.getblockcount()
-            logging.info('Connected - getblockcount returned {}'.format(blockcount))
+            logging.info('Calling getnetworkinfo to confirm connection and version')
+            networkinfo = self.rpc.getnetworkinfo()
+            if networkinfo["version"] < 160000:
+                raise exceptions.BitcoinCoreConnectionError(UNSUPPORTED_VERSION)
+            logging.info('Connected - getnetworkinfo successful')
 
         except socket.error as e:
             logging.warn(str(e))
