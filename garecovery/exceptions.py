@@ -10,7 +10,7 @@ class ImportMultiError(GARecoveryError):
     pass
 
 
-class NoDestinationAddressError(GARecoveryError):
+class InvalidMnemonicOrPasswordError(GARecoveryError):
     pass
 
 
@@ -18,9 +18,13 @@ class NeedMnemonicOrGaXPub(GARecoveryError):
     pass
 
 
-class OfileExistsError(GARecoveryError):
+class NoDestinationAddressError(GARecoveryError):
     pass
 
 
 class NoFeeRate(GARecoveryError):
+    pass
+
+
+class OfileExistsError(GARecoveryError):
     pass

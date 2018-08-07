@@ -48,6 +48,23 @@ def wallet_from_mnemonic(mnemonic_or_hex_seed, ver=wally.BIP32_VER_MAIN_PRIVATE)
     return wally.bip32_key_from_seed(seed, ver, wally.BIP32_FLAG_SKIP_HASH)
 
 
+def _decrypt_mnemonic(mnemonic, password):
+    """Decrypt a 27 word encrypted mnemonic to a 24 word mnemonic"""
+    mnemonic = ' '.join(mnemonic.split())
+    entropy = bytearray(wally.BIP39_ENTROPY_LEN_288)
+    assert wally.bip39_mnemonic_to_bytes(None, mnemonic, entropy) == len(entropy)
+    salt, encrypted = entropy[32:], entropy[:32]
+    derived = bytearray(64)
+    wally.scrypt(password.encode('utf-8'), salt, 16384, 8, 8, derived)
+    key, decrypted = derived[32:], bytearray(32)
+    wally.aes(key, encrypted, wally.AES_FLAG_DECRYPT, decrypted)
+    for i in range(len(decrypted)):
+        decrypted[i] ^= derived[i]
+    if wally.sha256d(decrypted)[:4] != salt:
+        raise exceptions.InvalidMnemonicOrPasswordError
+    return wally.bip39_mnemonic_from_bytes(None, decrypted)
+
+
 def get_mnemonic(args, attr='mnemonic_file', prompt='mnemonic/hex seed: '):
     """Get a mnemonic/hex_seed either from file or from the console"""
     filename = getattr(args, attr)
@@ -55,6 +72,12 @@ def get_mnemonic(args, attr='mnemonic_file', prompt='mnemonic/hex seed: '):
         mnemonic = user_input(prompt)
     else:
         mnemonic = open(filename).read()
+
+    if len(mnemonic.split()) == 27:
+        # encrypted mnemonic
+        password = user_input('mnemonic password: ')
+        return _decrypt_mnemonic(mnemonic, password)
+
     return ' '.join(mnemonic.split())
 
 
