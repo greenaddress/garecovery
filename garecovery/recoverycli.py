@@ -61,7 +61,7 @@ def _decrypt_mnemonic(mnemonic, password):
     for i in range(len(decrypted)):
         decrypted[i] ^= derived[i]
     if wally.sha256d(decrypted)[:4] != salt:
-        raise exceptions.InvalidMnemonicOrPasswordError
+        raise exceptions.InvalidMnemonicOrPasswordError('Incorrect password')
     return wally.bip39_mnemonic_from_bytes(None, decrypted)
 
 
