@@ -13,6 +13,7 @@ test_recoverycli:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -28,6 +29,7 @@ test_recoverycli_py3:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -43,6 +45,7 @@ test_recoverycli_py2_u16_04:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -58,6 +61,7 @@ test_recoverycli_py3_u16_04:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -86,6 +90,7 @@ test_osx:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -101,6 +106,7 @@ test_osx_py3:
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
@@ -112,6 +118,7 @@ test_windows_py3:
     - cd %CI_PROJECT_DIR%
     - call tools\dobuild.bat
   artifacts:
+    expire_in: 1 hour
     paths:
       - htmlcov
       - dist
