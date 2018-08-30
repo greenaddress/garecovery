@@ -104,3 +104,14 @@ test_osx_py3:
     paths:
       - htmlcov
       - dist
+
+test_windows_py3:
+  tags:
+    - win10
+  script:
+    - cd %CI_PROJECT_DIR%
+    - call tools\dobuild.bat
+  artifacts:
+    paths:
+      - htmlcov
+      - dist
