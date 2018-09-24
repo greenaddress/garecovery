@@ -15,6 +15,8 @@ def path_exists(filename):
     if filename == garecovery.clargs.DEFAULT_OFILE:
         return False
     return _path_exists(filename)
+
+
 _path_exists = os.path.exists
 garecovery.recoverycli.os.path.exists = path_exists
 

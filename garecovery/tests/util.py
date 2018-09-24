@@ -7,9 +7,11 @@ import unittest
 try:
     # Python 2
     import StringIO as io
+    import exceptions as exc
 except ImportError:
     # Python 3
     import io
+    import builtins as exc
 
 from garecovery.recoverycli import main
 from garecovery import clargs
@@ -71,7 +73,7 @@ def get_argparse_error(args):
         try:
             result = main([sys.argv[0], ] + args)
             raise Exception("Expected a fail")
-        except:
+        except exc.SystemExit:
             pass
     return output.getvalue()
 

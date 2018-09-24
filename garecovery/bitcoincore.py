@@ -31,6 +31,7 @@ class AuthServiceProxy(bitcoinrpc.authproxy.AuthServiceProxy):
     def batch_(self, requests):
         return self.__getattr__("batch_").batch_(requests)
 
+
 CORE_CONNECT_ERR = """\
 Failed to connect to core daemon {}
 
@@ -79,7 +80,7 @@ class Connection:
     def __getattr__(self, name):
         try:
             return getattr(self.rpc, name)
-        except:
+        except AttributeError:
             return None
 
     def __init__(self, args):

@@ -28,6 +28,8 @@ def path_exists(filename):
     if filename == garecovery.clargs.DEFAULT_OFILE:
         return False
     return _path_exists(filename)
+
+
 _path_exists = os.path.exists
 garecovery.recoverycli.os.path.exists = path_exists
 
@@ -35,9 +37,9 @@ garecovery.recoverycli.os.path.exists = path_exists
 # Do not read bitcoin config files from filesystem during testing
 def raise_IOError(*args):
     raise IOError()
+
+
 garecovery.bitcoin_config.open = raise_IOError
-
-
 default_feerate = 330
 
 
