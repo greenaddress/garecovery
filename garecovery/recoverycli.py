@@ -130,7 +130,8 @@ def main(argv=None):
             pycoin.networks.default.set_default_netcode(netcode)
 
             txs = recovery.get_transactions()
-            formatting.write_summary(txs, sys.stdout)
+            if clargs.args.show_summary:
+                formatting.write_summary(txs, sys.stdout)
             formatting.write_csv(txs, ofile)
 
         return 0

@@ -131,7 +131,7 @@ def expect_feerate(fee_satoshi_byte, args=None, is_segwit=False, amount=None, to
 
     # Raw tx
     if too_big:
-        stdout, ofiles = get_output_ex(args)
+        stdout, ofiles = get_output_ex(args + ['--show-summary'])
 
         summary = parse_summary(stdout)
         assert len(summary) == 1

@@ -124,7 +124,7 @@ def get_output(args, expect_error=False):
         else:
             if arg == '2of3':
                 two_of_three = True
-            filtered_args.append(arg)
+        filtered_args.append(arg)
 
     output, ofiles = get_output_ex(filtered_args, expect_error)
 

@@ -62,6 +62,7 @@ def do_test_standard_summary(nlocktimes_filename):
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
         '2of2',
+        '--show-summary',
         '--nlocktime-file={}'.format(datafile(nlocktimes_filename)),
     ])
     summary = parse_summary(output)
