@@ -129,7 +129,7 @@ def get_args(argv):
         help='Custom xprv (extended private key) for the 2of3 account. '
              'Only required if an xpub was specified when creating the subaccount')
 
-    advanced_2of3 = two_of_three.add_argument_group('Advanced options')
+    advanced_2of3 = parser.add_argument_group('2of3 advanced options')
     advanced_2of3.add_argument(
         '--key-search-depth',
         type=int,
