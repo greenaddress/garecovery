@@ -129,13 +129,6 @@ def get_args(argv):
         help='Custom xprv (extended private key) for the 2of3 account. '
              'Only required if an xpub was specified when creating the subaccount')
 
-    basic_2of3 = two_of_three.add_argument_group('Basic options')
-    basic_2of3.add_argument(
-        '--rescan',
-        action='store_true',
-        help='Rescan the blockchain (or scan file) looking for available '
-             '2 of 3 transactions. Can be slow.')
-
     advanced_2of3 = two_of_three.add_argument_group('Advanced options')
     advanced_2of3.add_argument(
         '--key-search-depth',
