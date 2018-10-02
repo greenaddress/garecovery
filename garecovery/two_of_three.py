@@ -6,8 +6,6 @@ import os
 import shutil
 import time
 
-import pycoin.ui
-
 from gaservices.utils import gacommon, gaconstants, txutil
 
 import wallycore as wally
@@ -146,7 +144,7 @@ class UTXO:
         not supported as it is too error prone.
         """
         default_feerate = clargs.args.default_feerate
-        if not is_testnet_address(self.dest_address):
+        if not util.is_testnet_address(self.dest_address):
             # For non-testnet addresses do not support --default-feerate
             msg = 'Unable to get fee rate from core'
             if default_feerate:
@@ -207,8 +205,8 @@ class UTXO:
         tx = txutil.new(util.get_current_blockcount() or 0, version=1)
         seq = gaconstants.MAX_BIP125_RBF_SEQUENCE
         txutil.add_input(tx, self.txhash_bin, self.vout, seq)
-        scriptPubKey = pycoin.ui.script_obj_from_address(self.dest_address)
-        txutil.add_output(tx, adjusted_amount_satoshi, scriptPubKey.script())
+        scriptpubkey = util.scriptpubkey_from_address(self.dest_address)
+        txutil.add_output(tx, adjusted_amount_satoshi, scriptpubkey)
         return txutil.to_hex(tx)
 
     def get_fee(self, tx):
@@ -244,15 +242,6 @@ class UTXO:
         return txutil.to_hex(signed_fee)
 
 
-def is_testnet_address(address):
-    version = wally.base58check_to_bytes(address)[0]
-    if version in gaconstants.ADDR_VERSIONS_TESTNET:
-        return True  # Testnet p2pkh/p2sh
-    if version in gaconstants.ADDR_VERSIONS_MAINNET:
-        return False  # Mainnet p2pkh/p2sh
-    assert False, 'Unknown address version {}'.format(version)
-
-
 class TwoOfThree(object):
 
     def __init__(self, mnemonic, wallet, backup_wallet, custom_xprv):
@@ -274,7 +263,7 @@ class TwoOfThree(object):
 
     def _is_testnet(self):
         """Return true if the destination address is a testnet address"""
-        return is_testnet_address(self.get_destination_address())
+        return util.is_testnet_address(self.get_destination_address())
 
     def scan_blockchain(self, keysets):
         # Blockchain scanning is delegated to core via bitcoinrpc

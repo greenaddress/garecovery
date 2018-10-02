@@ -41,11 +41,13 @@ def set_witness(tx, i, witness):
     wally.tx_set_input_witness(tx, i, wally.tx_witness_stack_create(witness))
 
 
-def get_output_address(tx, i, versions):
+def get_output_address(tx, i, versions, family):
     script = wally.tx_get_output_script(tx, i)
     script_type = wally.scriptpubkey_get_type(script)
     if script_type == wally.WALLY_SCRIPT_TYPE_P2PKH:
         return wally.base58check_from_bytes(bytearray([versions[0]]) + script[3:23])
     if script_type == wally.WALLY_SCRIPT_TYPE_P2SH:
         return wally.base58check_from_bytes(bytearray([versions[1]]) + script[2:22])
+    if script_type in (wally.WALLY_SCRIPT_TYPE_P2WSH, wally.WALLY_SCRIPT_TYPE_P2WPKH):
+        return wally.addr_segwit_from_bytes(bytearray(script), family, 0)
     assert False

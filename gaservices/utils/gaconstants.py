@@ -20,8 +20,14 @@ P2SH_TESTNET = 0xc4
 ADDR_VERSIONS_MAINNET = [P2PKH_MAINNET, P2SH_MAINNET]
 ADDR_VERSIONS_TESTNET = [P2PKH_TESTNET, P2SH_TESTNET]
 
+ADDR_FAMILY_MAINNET = 'bc'
+ADDR_FAMILY_TESTNET = 'tb'
+
 def get_address_versions(is_testnet):
     return ADDR_VERSIONS_TESTNET if is_testnet else ADDR_VERSIONS_MAINNET
+
+def get_address_family(is_testnet):
+    return ADDR_FAMILY_TESTNET if is_testnet else ADDR_FAMILY_MAINNET
 
 # GreenAddress script type for standard p2sh multisig UTXOs
 P2SH_FORTIFIED_OUT = 10

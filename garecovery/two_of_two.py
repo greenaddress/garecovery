@@ -2,8 +2,6 @@ import logging
 import json
 import sys
 
-from pycoin.tx.script.tools import disassemble
-
 from gaservices.utils import gacommon, gaconstants, txutil
 import wallycore as wally
 
@@ -49,10 +47,11 @@ class TwoOfTwo:
                 txdata['prevout_signatures'] = []
                 txdata['prevout_scripts'] = []
                 for i in range(wally.tx_get_num_inputs(tx)):
-                    dis = disassemble(wally.tx_get_input_script(tx, i)).split()
-                    _, ga_signature, _, redeem_script = dis
-                    txdata['prevout_signatures'].append(ga_signature[1:-1])
-                    txdata['prevout_scripts'].append(redeem_script[1:-1])
+                    inp = wally.tx_get_input_script(tx, i)
+                    ga_signature = wally.hex_from_bytes(inp[2:inp[1]+2])
+                    redeem_script = wally.hex_from_bytes(inp[-71:])
+                    txdata['prevout_signatures'].append(ga_signature)
+                    txdata['prevout_scripts'].append(redeem_script)
                     txdata['prevout_script_types'].append(gaconstants.P2SH_FORTIFIED_OUT)
 
     def _is_testnet(self):

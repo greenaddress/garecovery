@@ -139,7 +139,8 @@ class SummaryFormatter(Formatter):
 
         def get_bitcoin_address(tx_wif, idx):
             addr_versions = gaconstants.get_address_versions(clargs.args.is_testnet)
-            return txutil.get_output_address(tx_wif[0], idx, addr_versions)
+            addr_family = gaconstants.get_address_family(clargs.args.is_testnet)
+            return txutil.get_output_address(tx_wif[0], idx, addr_versions, addr_family)
 
         # A list of (heading, fn) for each column in the summary where fn is a function that takes
         # (tx, txout index) and returns a value for the column

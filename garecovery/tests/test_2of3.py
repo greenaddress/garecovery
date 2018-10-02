@@ -53,7 +53,8 @@ class AuthServiceProxy:
             tx = txutil.from_hex(line.strip())
             self.tx_by_id[txutil.get_txhash_bin(tx)] = tx
             for i in range(wally.tx_get_num_outputs(tx)):
-                addr = txutil.get_output_address(tx, i, gaconstants.ADDR_VERSIONS_TESTNET)
+                addr = txutil.get_output_address(tx, i, gaconstants.ADDR_VERSIONS_TESTNET,
+                                                 gaconstants.ADDR_FAMILY_TESTNET)
                 self.txout_by_address[addr] = (tx, i)
         self.imported = {}
 
@@ -287,7 +288,7 @@ def test_no_feerate_mainnet(mock_bitcoincore):
         '--key-search-depth=150',
     ]
 
-    with mock.patch('garecovery.two_of_three.is_testnet_address', side_effect=[True, False]):
+    with mock.patch('garecovery.util.is_testnet_address', side_effect=[True, False]):
         output = get_output(args, expect_error=True)
         assert 'Unable to get fee rate from core' in output
         assert 'ignoring --default-feerate' in output

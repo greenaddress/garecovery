@@ -11,8 +11,6 @@ from . import formatting
 from .two_of_two import TwoOfTwo
 from .two_of_three import TwoOfThree
 
-import pycoin.networks.default
-
 
 # Python 2/3 compatibility
 try:
@@ -124,10 +122,6 @@ def main(argv=None):
 
             recovery = get_recovery(clargs.args, mnemonic, seed)
             clargs.args.is_testnet = recovery.is_testnet
-
-            # Set the pycoin netcode
-            netcode = 'XTN' if recovery.is_testnet else 'BTC'
-            pycoin.networks.default.set_default_netcode(netcode)
 
             txs = recovery.get_transactions()
             if clargs.args.show_summary:
