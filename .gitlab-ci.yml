@@ -3,7 +3,7 @@ cache:
   - deps_cache
 
 test_recoverycli:
-  image: greenaddress/recovery@sha256:0b6740458301e62a552850b9f641fe98d497ab03ac89f8eaa1c09a8aa80ef514
+  image: greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2
   tags:
     - ga
   script:
@@ -19,7 +19,7 @@ test_recoverycli:
       - dist
 
 test_recoverycli_py3:
-  image: greenaddress/recovery@sha256:0b6740458301e62a552850b9f641fe98d497ab03ac89f8eaa1c09a8aa80ef514
+  image: greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2
   tags:
     - ga
   script:
@@ -34,8 +34,8 @@ test_recoverycli_py3:
       - htmlcov
       - dist
 
-test_recoverycli_py2_u16_04:
-  image: greenaddress/recovery_ubuntu16.04@sha256:ac3017a1ca59cdb13f57491034973b3848636e6d0c44bdf3af4f13d39aed92b4
+test_recoverycli_py2_u18_04:
+  image: greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536
   tags:
     - ga
   script:
@@ -50,8 +50,8 @@ test_recoverycli_py2_u16_04:
       - htmlcov
       - dist
 
-test_recoverycli_py3_u16_04:
-  image: greenaddress/recovery_ubuntu16.04@sha256:ac3017a1ca59cdb13f57491034973b3848636e6d0c44bdf3af4f13d39aed92b4
+test_recoverycli_py3_u18_04:
+  image: greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536
   tags:
     - ga
   script:
