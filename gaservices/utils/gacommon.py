@@ -67,7 +67,8 @@ class ActiveSignatory:
         self.key = key
 
     def get_signature(self, preimage_hash):
-        return wally.ec_sig_from_bytes(self.key, preimage_hash, wally.EC_FLAG_ECDSA)
+        flags = wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R
+        return wally.ec_sig_from_bytes(self.key, preimage_hash, flags)
 
 
 def _to_der(sig):
