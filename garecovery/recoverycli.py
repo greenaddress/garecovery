@@ -102,6 +102,9 @@ def get_recovery(options, mnemonic, seed):
 
 
 def main(argv=None):
+    wally.init(0)
+    wally.secp_randomize(os.urandom(wally.WALLY_SECP_RANDOMIZE_LEN))
+
     clargs.set_args(argv or sys.argv)
     logging.basicConfig(level=clargs.args.loglevel)
 
@@ -128,8 +131,10 @@ def main(argv=None):
                 formatting.write_summary(txs, sys.stdout)
             formatting.write_csv(txs, ofile)
 
+        wally.cleanup(0)
         return 0
 
     except exceptions.GARecoveryError as e:
         print(e)
+        wally.cleanup(0)
         return -1
