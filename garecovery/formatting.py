@@ -138,8 +138,8 @@ class SummaryFormatter(Formatter):
             return btc(wally.tx_get_total_output_satoshi(tx_wif[0]), units)
 
         def get_bitcoin_address(tx_wif, idx):
-            addr_versions = gaconstants.get_address_versions(clargs.args.is_testnet)
-            addr_family = gaconstants.get_address_family(clargs.args.is_testnet)
+            addr_versions = gaconstants.get_address_versions(clargs.args.network)
+            addr_family = gaconstants.get_address_family(clargs.args.network)
             return txutil.get_output_address(tx_wif[0], idx, addr_versions, addr_family)
 
         # A list of (heading, fn) for each column in the summary where fn is a function that takes

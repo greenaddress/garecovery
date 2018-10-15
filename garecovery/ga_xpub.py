@@ -6,27 +6,27 @@ import wallycore as wally
 from . import exceptions
 
 
-def get_bip32_pubkey(chaincode, key, testnet):
+def get_bip32_pubkey(chaincode, key, network):
     """Return a bip32 public key which can be either mainnet or testnet"""
-    ver = wally.BIP32_VER_TEST_PUBLIC if testnet else wally.BIP32_VER_MAIN_PUBLIC
+    ver = {'testnet': wally.BIP32_VER_TEST_PUBLIC, 'mainnet': wally.BIP32_VER_MAIN_PUBLIC}[network]
     public_key = key
     private_key = None
     return wally.bip32_key_init(ver, 0, 0, chaincode, public_key, private_key, None, None)
 
 
-def get_ga_root_key(testnet):
+def get_ga_root_key(network):
     """Return the GreenAddress root public key for the given network, or as set by options"""
-    key_data = gaconstants.GA_KEY_DATA_TESTNET if testnet else gaconstants.GA_KEY_DATA_MAINNET
+    key_data = gaconstants.get_ga_key_data(network)
     return get_bip32_pubkey(
         wally.hex_to_bytes(key_data['chaincode']),
         wally.hex_to_bytes(key_data['pubkey']),
-        testnet
+        network
     )
 
 
-def derive_ga_xpub(gait_path, subaccount, testnet):
+def derive_ga_xpub(gait_path, subaccount, network):
     """Derive a GreenAddress extended public key"""
-    ga_root_key = get_ga_root_key(testnet)
+    ga_root_key = get_ga_root_key(network)
     if subaccount is not None:
         branch = 3
         ga_path = [branch] + gait_path + [subaccount]
@@ -84,7 +84,7 @@ def gait_paths_from_seed(seed):
     return [get_gait_path(path_input) for path_input in [path_input, path_input_hex]]
 
 
-def xpubs_from_mnemonic(mnemonic, subaccount, testnet):
+def xpubs_from_mnemonic(mnemonic, subaccount, network):
     """Derive GreenAddress xpubs from a mnemonic"""
     if mnemonic is None:
         msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
@@ -96,10 +96,10 @@ def xpubs_from_mnemonic(mnemonic, subaccount, testnet):
     assert written == wally.BIP39_SEED_LEN_512
 
     gait_paths = [gait_path] + gait_paths_from_seed(seed)
-    return [derive_ga_xpub(gait_path, subaccount, testnet) for gait_path in gait_paths]
+    return [derive_ga_xpub(gait_path, subaccount, network) for gait_path in gait_paths]
 
 
-def xpubs_from_seed(seed, subaccount, testnet):
+def xpubs_from_seed(seed, subaccount, network):
     """Derive GreenAddress xpubs from a hex seed"""
     gait_paths = gait_paths_from_seed(seed)
-    return [derive_ga_xpub(gait_path, subaccount, testnet) for gait_path in gait_paths]
+    return [derive_ga_xpub(gait_path, subaccount, network) for gait_path in gait_paths]

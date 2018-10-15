@@ -58,7 +58,7 @@ class Connection:
         return {key: config.get_val(key) for key in keys}
 
     @staticmethod
-    def get_http_auth_header(config, testnet):
+    def get_http_auth_header(config, network):
         """Get HTTP authentication header
 
         Authentication is basic HTTP authentication.
@@ -73,10 +73,10 @@ class Connection:
             rpccookiefile = config['rpccookiefile']
             if rpccookiefile is None:
                 default_rpc_cookies = {
-                    True: '~/.bitcoin/testnet3/.cookie',
-                    False: '~/.bitcoin/.cookie',
+                    'testnet': '~/.bitcoin/testnet3/.cookie',
+                    'mainnet': '~/.bitcoin/.cookie',
                 }
-                rpccookiefile = os.path.expanduser(default_rpc_cookies[testnet])
+                rpccookiefile = os.path.expanduser(default_rpc_cookies[network])
             logging.info('Reading bitcoin authentication cookie from "{}"'.format(rpccookiefile))
             auth_data = open(rpccookiefile, "r").read().strip().encode("ascii")
 
@@ -103,16 +103,16 @@ class Connection:
         # Default ports
         if config.get('rpcport', None) is None:
             default_rpc_ports = {
-                True: 18332,
-                False: 8332,
+                'testnet': 18332,
+                'mainnet': 8332,
             }
-            config['rpcport'] = default_rpc_ports[args.is_testnet]
+            config['rpcport'] = default_rpc_ports[args.network]
             logging.info('Defaulting rpc port to {}'.format(config['rpcport']))
 
         # connect to core
         try:
             try:
-                http_auth_header = Connection.get_http_auth_header(config, args.is_testnet)
+                http_auth_header = Connection.get_http_auth_header(config, args.network)
                 hostname = config['rpcconnect']
                 port = config['rpcport']
             except KeyError as e:

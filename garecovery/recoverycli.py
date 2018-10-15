@@ -124,7 +124,6 @@ def main(argv=None):
             seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed)
 
             recovery = get_recovery(clargs.args, mnemonic, seed)
-            clargs.args.is_testnet = recovery.is_testnet
 
             txs = recovery.get_transactions()
             if clargs.args.show_summary:
