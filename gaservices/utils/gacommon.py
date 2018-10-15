@@ -39,8 +39,8 @@ def _unzip(data, key):
     return all_data
 
 
-def private_key_to_wif(key, testnet):
-    ver = b'\xef' if testnet else b'\x80'
+def private_key_to_wif(key, network):
+    ver = {'testnet': b'\xef', 'mainnet': b'\x80'}[network]
     compressed = b'\x01'
     priv_key = wally.bip32_key_get_priv_key(key)
     return wally.base58check_from_bytes(ver + priv_key + compressed)

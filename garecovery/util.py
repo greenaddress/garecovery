@@ -42,12 +42,12 @@ def decode_segwit_address(address):
         return False, None
 
 
-def is_testnet_address(address):
+def network_from_address(address):
     is_base58_address, decoded = decode_base58_address(address)
     if is_base58_address:
-        return decoded[0] in gaconstants.ADDR_VERSIONS_TESTNET
+        return 'testnet' if decoded[0] in gaconstants.ADDR_VERSIONS_TESTNET else 'mainnet'
     elif decode_segwit_address(address)[0]:
-        return address[:2] == gaconstants.ADDR_FAMILY_TESTNET
+        return 'testnet' if address[:2] == gaconstants.ADDR_FAMILY_TESTNET else 'mainnet'
     raise exceptions.InvalidDestinationAddressError('Invalid address')
 
 

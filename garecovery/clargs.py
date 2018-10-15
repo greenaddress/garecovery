@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+from gaservices.utils import gaconstants
+
 
 # Define GreenAddress_T0 as the earliest possible GreenAddress UTXO
 # This is used as the default value for scanning the blockchain
@@ -36,6 +38,12 @@ def get_args(argv):
         choices=['2of2', '2of3'],
         default='2of2',
         help='Type of recovery to perform')
+    parser.add_argument(
+        '-n', '--network',
+        dest='network',
+        choices=gaconstants.SUPPORTED_NETWORKS,
+        default='mainnet',
+        help="Network the coins belong to")
     parser.add_argument(
         '--mnemonic-file',
         dest='mnemonic_file',

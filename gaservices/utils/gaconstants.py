@@ -11,6 +11,8 @@ MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 # BIP32 hardened derivation flag
 HARDENED = 0x80000000
 
+SUPPORTED_NETWORKS = ['mainnet', 'testnet']
+
 P2PKH_MAINNET = 0x00
 P2SH_MAINNET = 0x05
 
@@ -23,11 +25,11 @@ ADDR_VERSIONS_TESTNET = [P2PKH_TESTNET, P2SH_TESTNET]
 ADDR_FAMILY_MAINNET = 'bc'
 ADDR_FAMILY_TESTNET = 'tb'
 
-def get_address_versions(is_testnet):
-    return ADDR_VERSIONS_TESTNET if is_testnet else ADDR_VERSIONS_MAINNET
+def get_address_versions(network):
+    return {'testnet': ADDR_VERSIONS_TESTNET, 'mainnet': ADDR_VERSIONS_MAINNET}[network]
 
-def get_address_family(is_testnet):
-    return ADDR_FAMILY_TESTNET if is_testnet else ADDR_FAMILY_MAINNET
+def get_address_family(network):
+    return {'testnet': ADDR_FAMILY_TESTNET, 'mainnet': ADDR_FAMILY_MAINNET}[network]
 
 # GreenAddress script type for standard p2sh multisig UTXOs
 P2SH_FORTIFIED_OUT = 10
@@ -44,3 +46,6 @@ GA_KEY_DATA_TESTNET = {
     'chaincode': 'b60befcc619bb1c212732770fe181f2f1aa824ab89f8aab49f2e13e3a56f0f04',
     'pubkey': '036307e560072ed6ce0aa5465534fb5c258a2ccfbc257f369e8e7a181b16d897b3',
 }
+
+def get_ga_key_data(network):
+    return {'testnet': GA_KEY_DATA_TESTNET, 'mainnet': GA_KEY_DATA_MAINNET}[network]

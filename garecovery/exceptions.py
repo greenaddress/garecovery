@@ -18,6 +18,10 @@ class InvalidMnemonicOrPasswordError(GARecoveryError):
     pass
 
 
+class InvalidNetwork(GARecoveryError):
+    pass
+
+
 class NeedMnemonicOrGaXPub(GARecoveryError):
     pass
 
