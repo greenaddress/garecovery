@@ -43,7 +43,7 @@ class P2SH:
 
     type_ = 'p2sh'
 
-    def __init__(self, pubkeys, testnet):
+    def __init__(self, pubkeys, network):
         self.redeem_script = get_redeem_script(pubkeys)
         self.redeem_script_hex = wally.hex_from_bytes(self.redeem_script)
 
@@ -51,7 +51,7 @@ class P2SH:
         script_hash_hex = wally.hex_from_bytes(script_hash)
         self.scriptPubKey = get_scriptpubkey_hex(script_hash_hex)
 
-        ver = b'\xc4' if testnet else b'\x05'
+        ver = {'testnet': b'\xc4', 'mainnet': b'\x05'}[network]
         self.address = wally.base58check_from_bytes(ver + script_hash)
 
     def get_witness_script(self):
@@ -62,14 +62,14 @@ class P2WSH(P2SH):
 
     type_ = 'p2wsh'
 
-    def __init__(self, pubkeys, testnet):
-        P2SH.__init__(self, pubkeys, testnet)
+    def __init__(self, pubkeys, network):
+        P2SH.__init__(self, pubkeys, network)
 
     def get_witness_script(self):
         return wally.witness_program_from_bytes(self.redeem_script, wally.WALLY_SCRIPT_SHA256)
 
 
-def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
+def createDerivedKeySet(ga_xpub, wallets, custom_xprv, network):
     """Return class instances which represent sets of derived keys
 
     Given a user's key material call createDerivedKeySet to create a class
@@ -118,7 +118,7 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, testnet):
             public_keys = [self.ga_key] + user_public_keys
 
             # Script could be segwit or not - generate both segwit and non-segwit addresses
-            self.witnesses = {cls.type_: cls(public_keys, testnet) for cls in (P2SH, P2WSH)}
+            self.witnesses = {cls.type_: cls(public_keys, network) for cls in (P2SH, P2WSH)}
             logging.debug('p2sh address: {}'.format(self.witnesses['p2sh'].address))
             logging.debug('p2wsh address: {}'.format(self.witnesses['p2wsh'].address))
 
@@ -143,19 +143,11 @@ class UTXO:
         On testnet only it is possible to pass --default-feerate as an option. On mainnet this is
         not supported as it is too error prone.
         """
-        default_feerate = clargs.args.default_feerate
-        if not util.is_testnet_address(self.dest_address):
-            # For non-testnet addresses do not support --default-feerate
-            msg = 'Unable to get fee rate from core'
-            if default_feerate:
-                msg = msg + ' (ignoring --default-feerate on mainnet)'
-            raise exceptions.NoFeeRate(msg)
-
-        if default_feerate is None:
+        if clargs.args.default_feerate is None:
             msg = 'Unable to get fee rate from core, you must pass --default-feerate'
             raise exceptions.NoFeeRate(msg)
 
-        fee_satoshi_byte = decimal.Decimal(default_feerate)
+        fee_satoshi_byte = decimal.Decimal(clargs.args.default_feerate)
         return fee_satoshi_byte
 
     def get_feerate(self):
@@ -255,15 +247,24 @@ class TwoOfThree(object):
             assert self.custom_xprv
             logging.info('Using custom xprv = {}'.format(self.custom_xprv))
 
-        self.is_testnet = self._is_testnet()
+        inferred_network = self.infer_network()
+        if inferred_network != clargs.args.network:
+            msg = 'Specified network and network inferred from address do not match' \
+                  '(specified={}, inferred={})'.format(clargs.args.network, inferred_network)
+            raise exceptions.InvalidNetwork(msg)
+
+        if clargs.args.network != 'testnet' and clargs.args.default_feerate:
+            # For non-testnet addresses do not support --default-feerate
+            msg = '--default-feerate can be used only in testnet'
+            raise exceptions.NoFeeRate(msg)
 
     def get_destination_address(self):
         """Return the destination address to recover funds to"""
         return clargs.args.destination_address
 
-    def _is_testnet(self):
-        """Return true if the destination address is a testnet address"""
-        return util.is_testnet_address(self.get_destination_address())
+    def infer_network(self):
+        """Infer network from the destination address"""
+        return util.network_from_address(self.get_destination_address())
 
     def scan_blockchain(self, keysets):
         # Blockchain scanning is delegated to core via bitcoinrpc
@@ -358,7 +359,7 @@ class TwoOfThree(object):
 
     def _derived_keyset(self, ga_xpub):
         """Call createDerivedKeySet with ga_xpub"""
-        return createDerivedKeySet(ga_xpub, self.wallets, self.custom_xprv, self.is_testnet)
+        return createDerivedKeySet(ga_xpub, self.wallets, self.custom_xprv, clargs.args.network)
 
     def get_keysets(self, subaccounts, pointers):
         """Return the keysets for a set of subaccounts/pointers"""
@@ -372,7 +373,7 @@ class TwoOfThree(object):
             logging.warn('No --ga-xpub specified, deriving and iterating over possible subaccounts')
             keyset_factories = []
             for subaccount in range(*subaccounts):
-                xpubs = ga_xpub.xpubs_from_mnemonic(self.mnemonic, subaccount, self.is_testnet)
+                xpubs = ga_xpub.xpubs_from_mnemonic(self.mnemonic, subaccount, clargs.args.network)
                 keyset_factories.extend([self._derived_keyset(xpub) for xpub in xpubs])
         else:
             assert clargs.args.ga_xpub

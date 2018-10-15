@@ -128,6 +128,7 @@ def expect_feerate(fee_satoshi_byte, args=None, is_segwit=False, amount=None, to
             '--rpcuser=abc',
             '--rpcpassword=abc',
             '2of3',
+            '--network=testnet',
             '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
             '--search-subaccounts={}'.format(sub_depth),
             '--destination-address={}'.format(destination_address),
@@ -235,6 +236,7 @@ def test_fee_calculation_segwit(mock_bitcoincore):
         '--rpcpassword=abc',
         '--mnemonic-file={}'.format(datafile('mnemonic_8.txt')),
         '2of3',
+        '--network=testnet',
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_9.txt')),
@@ -257,6 +259,7 @@ def test_no_feerate(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
         '--search-subaccounts={}'.format(sub_depth),
         '--destination-address={}'.format(destination_address),
@@ -269,13 +272,10 @@ def test_no_feerate(mock_bitcoincore):
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_no_feerate_mainnet(mock_bitcoincore):
-    """Test that with a mainnet address --default-feerate is ignored"""
+    """Test that with network mainnet --default-feerate cannot be passed"""
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
-    estimate = {'blocks': 3, 'feerate': decimal.Decimal(-1)}
-    mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
-    default_feerate = 123
-    destination_address = 'mynHfTyTWyGGB76NBFbfUrTnn8YWQkTJVs'
+    destination_address = '1KGLNQtUhwq1PzckTgdHewFTv8woWDNqHV'
     args = [
         '--mnemonic-file={}'.format(datafile('mnemonic_2.txt')),
         '--rpcuser=abc',
@@ -288,10 +288,8 @@ def test_no_feerate_mainnet(mock_bitcoincore):
         '--key-search-depth=150',
     ]
 
-    with mock.patch('garecovery.util.is_testnet_address', side_effect=[True, False]):
-        output = get_output(args, expect_error=True)
-        assert 'Unable to get fee rate from core' in output
-        assert 'ignoring --default-feerate' in output
+    output = get_output(args, expect_error=True)
+    assert '--default-feerate can be used only in testnet' in output
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
@@ -308,6 +306,7 @@ def test_fee_calculation_default_feerate_option(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
         '--search-subaccounts={}'.format(sub_depth),
         '--destination-address={}'.format(destination_address),
@@ -332,6 +331,7 @@ def test_recover_2of3(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_7.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -371,6 +371,7 @@ def test_set_nlocktime(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_7.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -396,6 +397,7 @@ def test_provide_xpub(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_10.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--destination-address={}'.format(destination_address),
@@ -438,6 +440,7 @@ def test_no_xpub_hex_seeds(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('hex_seed_10.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -465,6 +468,7 @@ def test_hex_seeds(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('hex_seed_10.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--destination-address={}'.format(destination_address),
@@ -488,6 +492,7 @@ def test_xpub_and_subaccount_search(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('hex_seed_10.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--destination-address={}'.format(destination_address),
@@ -515,6 +520,7 @@ def test_custom_prv(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--custom-xprv={}'.format(custom_xprv),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -537,6 +543,7 @@ def test_custom_xprv_recovery_mnemonic(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_10.txt')),
         '--custom-xprv={}'.format(custom_xprv),
         '--key-search-depth={}'.format(key_depth),
@@ -567,6 +574,7 @@ def test_prompt_for_mnemonic(mock_bitcoincore):
             '--rpcuser=abc',
             '--rpcpassword=abc',
             '2of3',
+            '--network=testnet',
             '--recovery-mnemonic-file={}'.format(datafile('mnemonic_7.txt')),
             '--key-search-depth={}'.format(key_depth),
             '--search-subaccounts={}'.format(sub_depth),
@@ -597,6 +605,7 @@ def test_prompt_for_recovery_mnemonic(mock_bitcoincore):
             '--rpcuser=abc',
             '--rpcpassword=abc',
             '2of3',
+            '--network=testnet',
             '--search-subaccounts={}'.format(sub_depth),
             '--key-search-depth={}'.format(key_depth),
             '--destination-address={}'.format(destination_address),
@@ -629,6 +638,7 @@ def test_prompt_for_both_mnemonics(mock_bitcoincore):
             '--rpcuser=abc',
             '--rpcpassword=abc',
             '2of3',
+            '--network=testnet',
             '--key-search-depth={}'.format(key_depth),
             '--search-subaccounts={}'.format(sub_depth),
             '--destination-address={}'.format(destination_address),
@@ -654,6 +664,7 @@ def test_importmulti_error(mock_bitcoincore):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
         '--key-search-depth=5',
         '--search-subaccounts={}'.format(sub_depth),
@@ -695,6 +706,7 @@ def test_scan_blockchain(mock_bitcoincore):
             '--rpcuser=abc',
             '--rpcpassword=abc',
             '2of3',
+            '--network=testnet',
             '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
             '--key-search-depth={}'.format(key_search_depth),
             '--search-subaccounts={}'.format(sub_depth),
@@ -776,6 +788,7 @@ def test_missing_config_file_no_params(mock_bitcoincore):
             '--mnemonic-file={}'.format(datafile('mnemonic_2.txt')),
             '--config-filename={}'.format(config_filename),
             '2of3',
+            '--network=testnet',
             '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
             '--key-search-depth={}'.format(key_depth),
             '--search-subaccounts={}'.format(sub_depth),
@@ -814,6 +827,7 @@ def test_authenticate_password(HTTPConnection):
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_7.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -830,6 +844,7 @@ def test_authenticate_cookiefile(HTTPConnection):
     args = [
         '--mnemonic-file={}'.format(datafile('mnemonic_6.txt')),
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_7.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
@@ -870,6 +885,7 @@ def test_core_daemon_not_available():
             '--rpcport={}'.format(rpcport),
             '--rpc-timeout-minutes={}'.format(rpctimeout),
             '2of3',
+            '--network=testnet',
             '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
             '--key-search-depth={}'.format(key_depth),
             '--search-subaccounts={}'.format(sub_depth),
@@ -888,6 +904,7 @@ def _verify(mnemonic_filename, recovery_mnemonic_filename, utxos, expect_witness
         '--rpcpassword=abc',
         '--mnemonic-file={}'.format(datafile(mnemonic_filename)),
         '2of3',
+        '--network=testnet',
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
         '--recovery-mnemonic-file={}'.format(datafile(recovery_mnemonic_filename)),
@@ -961,6 +978,7 @@ def test_too_old_version(mock_bitcoincore):
     args = [
         '--mnemonic-file={}'.format(datafile('mnemonic_2.txt')),
         '2of3',
+        '--network=testnet',
         '--recovery-mnemonic-file={}'.format(datafile('mnemonic_3.txt')),
         '--key-search-depth=5',
         '--search-subaccounts={}'.format(sub_depth),
@@ -984,12 +1002,15 @@ def test_destination_addresses(mock_bitcoincore):
         '--search-subaccounts={}'.format(sub_depth),
     ]
 
-    valid_destinations = [
-        'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn',  # p2pkh testnet
+    valid_destinations_testnet = [
+        'mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn',  # p2pkh
         '2MzQwSSnBHWHqSAqtTVQ6v47XtaisrJa1Vc',  # p2sh
         'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx',  # p2wpkh
         'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7',  # p2wsh
-        '17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem',  # p2pkh mainnet
+    ]
+
+    valid_destinations_mainnet = [
+        '17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem',  # p2pkh
         '3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX',  # p2sh
         'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',  # p2wpkh
         'bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3',  # p2wsh
@@ -1006,9 +1027,21 @@ def test_destination_addresses(mock_bitcoincore):
         'bc1qr508d6qejxtdg4y5r3zarvaryv98gj9p',  # invalid progam len
     ]
 
-    for d in valid_destinations:
-        output = get_output(args + ['--destination-address={}'.format(d)])
+    for d in valid_destinations_testnet:
+        output = get_output(args + ['--destination-address={}'.format(d), '--network=testnet'])
         assert output == ''
+
+        output = get_output(args + ['--destination-address={}'.format(d), '--network=mainnet'],
+                            expect_error=True)
+        assert 'Specified network and network inferred from address do not match' in output
+
+    for d in valid_destinations_mainnet:
+        output = get_output(args + ['--destination-address={}'.format(d), '--network=mainnet'])
+        assert output == ''
+
+        output = get_output(args + ['--destination-address={}'.format(d), '--network=testnet'],
+                            expect_error=True)
+        assert 'Specified network and network inferred from address do not match' in output
 
     for d in invalid_destinations:
         output = get_output(args + ['--destination-address={}'.format(d)], expect_error=True)
