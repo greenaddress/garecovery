@@ -30,7 +30,11 @@ class TwoOfTwo:
 
         self.fixup_old_nlocktimes()
 
-        self.is_testnet = self._is_testnet()
+        inferred_network = self.infer_network()
+        if inferred_network != clargs.args.network:
+            msg = 'Specified network and network inferred from nlocktime file do not match' \
+                  '(specified={}, inferred={})'.format(clargs.args.network, inferred_network)
+            raise exceptions.InvalidNetwork(msg)
 
     def fixup_old_nlocktimes(self):
         """Fixup data from old format nlocktimes files
@@ -54,12 +58,13 @@ class TwoOfTwo:
                     txdata['prevout_scripts'].append(redeem_script)
                     txdata['prevout_script_types'].append(gaconstants.P2SH_FORTIFIED_OUT)
 
-    def _is_testnet(self):
-        """Return true if the GreenAddress xpub for testnet is found in the redeem script
+    def infer_network(self):
+        """Return the network inferred from the GreenAddress xpub found in the redeem script
 
         This is determined by generating the sets of possible GreenAddress public keys for each
         network (testnet/mainnet) and then searching for them in the redeem script
         """
+
         pointer = self.txdata[0]['prevout_pointers'][0]
         subaccount = self.txdata[0]['prevout_subaccounts'][0]
 
@@ -68,27 +73,27 @@ class TwoOfTwo:
             xpub = gacommon.derive_hd_key(xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
             return wally.hex_from_bytes(wally.bip32_key_get_pub_key(xpub))
 
-        def get_pubkeys_hex(fn, key_material, testnet):
+        def get_pubkeys_hex(fn, key_material, network):
             """Return a list of hex-encoded public key given either a seed or a mnemonic"""
-            xpubs = fn(key_material, subaccount, testnet)
+            xpubs = fn(key_material, subaccount, network)
             return [get_pubkey_for_pointer_hex(xpub) for xpub in xpubs]
 
-        def get_pubkeys_for_network_hex(testnet):
-            """Return all the possible ga public keys (hex encoded) for testnet/non-testnet"""
-            pubkeys_hex = get_pubkeys_hex(ga_xpub.xpubs_from_seed, self.seed, testnet)
+        def get_pubkeys_for_network_hex(network):
+            """Return all the possible ga public keys (hex encoded) for the given network"""
+            pubkeys_hex = get_pubkeys_hex(ga_xpub.xpubs_from_seed, self.seed, network)
             if self.mnemonic:
                 pubkeys_hex.extend(
-                    get_pubkeys_hex(ga_xpub.xpubs_from_mnemonic, self.mnemonic, testnet))
+                    get_pubkeys_hex(ga_xpub.xpubs_from_mnemonic, self.mnemonic, network))
             return pubkeys_hex
 
-        mainnet_xpubs = get_pubkeys_for_network_hex(testnet=False)
-        testnet_xpubs = get_pubkeys_for_network_hex(testnet=True)
+        mainnet_xpubs = get_pubkeys_for_network_hex('mainnet')
+        testnet_xpubs = get_pubkeys_for_network_hex('testnet')
 
         redeem_script = self.txdata[0]['prevout_scripts'][0]
         if any(xpub in redeem_script for xpub in mainnet_xpubs):
-            return False
+            return 'mainnet'
         if any(xpub in redeem_script for xpub in testnet_xpubs):
-            return True
+            return 'testnet'
 
         # Default to mainnet
         # Generally one of the derived xpubs will be found in the redeem script. It's possible
@@ -97,7 +102,7 @@ class TwoOfTwo:
         # will not be found. In this case default to mainnet.
         logging.warn("Unable to detect network. Defaulting to mainnet. Consider "
                      "passing the full mnemonic rather than hex seed")
-        return False
+        return 'mainnet'
 
     def _get_signed_tx(self, txdata):
         key = gacommon.derive_user_private_key(txdata, self.wallet, branch=1)
@@ -105,7 +110,7 @@ class TwoOfTwo:
 
     def _get_private_key_wif(self, txdata):
         key = gacommon.derive_user_private_key(txdata, self.wallet, branch=4)
-        return gacommon.private_key_to_wif(key, self.is_testnet)
+        return gacommon.private_key_to_wif(key, clargs.args.network)
 
     def get_transactions(self):
         txs = []

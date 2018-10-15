@@ -27,6 +27,7 @@ def test_no_transactions():
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_12.txt')),
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('empty_nlocktimes.zip')),
     ],
         expect_error=True)
@@ -40,6 +41,7 @@ def test_ofile_exists():
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
     ],
         expect_error=True)
@@ -53,6 +55,7 @@ def test_standard_segwit():
         '--mnemonic-file={}'.format(datafile('mnemonic_4.txt')),
         '--show-summary',
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('nlocktimes_1.zip')),
     ])
     summary = parse_summary(output)
@@ -64,6 +67,7 @@ def do_test_standard_summary(nlocktimes_filename):
     output, ofiles = get_output_ex([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
         '2of2',
+        '--network=testnet',
         '--show-summary',
         '--nlocktime-file={}'.format(datafile(nlocktimes_filename)),
     ])
@@ -122,6 +126,7 @@ def test_seed_gait_derivation():
         '--mnemonic-file={}'.format(datafile('mnemonic_hw_2.txt')),
         '--show-summary',
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('nlocktimes_hw_2.zip')),
     ])
     summary = parse_summary(output)
@@ -136,6 +141,7 @@ def test_hex_seed_login():
         '--mnemonic-file={}'.format(datafile('hex_seed_hw_2.txt')),
         '--show-summary',
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('nlocktimes_hw_2.zip')),
     ])
     summary = parse_summary(output)
@@ -162,6 +168,7 @@ def test_nlocktime_str(current_blockcount, nlocktime_message):
         '--show-summary',
         '--current-blockcount={}'.format(current_blockcount),
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
     ])
     summary = parse_summary(output)
@@ -179,6 +186,7 @@ def test_standard_result():
     output = get_output([
         '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
     ])
 
@@ -191,6 +199,7 @@ def _verify(mnemonic_filename, nlocktimes_filename, expect_witness, utxos):
     output = get_output([
         '--mnemonic-file={}'.format(datafile(mnemonic_filename)),
         '2of2',
+        '--network=testnet',
         '--nlocktime-file={}'.format(datafile(nlocktimes_filename)),
     ])
 
@@ -255,6 +264,7 @@ def test_mnemonic_prompt():
 
         output = get_output([
             '2of2',
+            '--network=testnet',
             '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
         ])
 
@@ -295,6 +305,7 @@ def test_missing_nlocktime_arg():
             output = get_output([
                 '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
                 '2of2',
+                '--network=testnet',
             ])
         except Exit:
             msg = 'argument --nlocktime-file is required'
@@ -312,6 +323,7 @@ def test_encrypted_mnemonic():
             output, ofiles = get_output_ex([
                 '--mnemonic-file={}'.format(datafile('mnemonic_1_encrypted.txt')),
                 '2of2',
+                '--network=testnet',
                 '--nlocktime-file={}'.format(datafile('compressed_1.zip')),
             ],
                 expect_error=(not ok))
@@ -321,3 +333,20 @@ def test_encrypted_mnemonic():
                 assert read_datafile("signed_2of2_1") in ofiles['garecovery.csv']
             else:
                 assert 'Incorrect password' in output
+
+
+def test_unmatching_networks():
+    """Test specified network and inferred network not matching"""
+
+    for network, mnemonic, nlocktime_file in [
+        ('testnet', 'hex_seed_1.txt', 'compressed_1.zip'),
+        ('mainnet', 'mnemonic_4.txt', 'nlocktimes_1.zip'),
+    ]:
+        output = get_output([
+            '2of2',
+            '-n={}'.format(network),
+            '--mnemonic={}'.format(datafile(mnemonic)),
+            '--nlocktime-file={}'.format(datafile(nlocktime_file)),
+        ], expect_error=True)
+
+        assert 'Specified network and network inferred from nlocktime file do not match' in output
