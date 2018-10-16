@@ -73,9 +73,9 @@ class TwoOfTwo:
             xpub = gacommon.derive_hd_key(xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
             return wally.hex_from_bytes(wally.bip32_key_get_pub_key(xpub))
 
-        def get_pubkeys_hex(fn, key_material, network):
+        def get_pubkeys_hex(fn, keys_material, network):
             """Return a list of hex-encoded public key given either a seed or a mnemonic"""
-            xpubs = fn(key_material, subaccount, network)
+            xpubs = fn(keys_material, subaccount, network)
             return [get_pubkey_for_pointer_hex(xpub) for xpub in xpubs]
 
         def get_pubkeys_for_network_hex(network):
