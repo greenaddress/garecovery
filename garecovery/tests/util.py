@@ -2,7 +2,7 @@ import csv
 import mock
 import os
 import sys
-import unittest
+import wallycore as wally
 
 try:
     # Python 2
@@ -14,16 +14,35 @@ except ImportError:
     import builtins as exc
 
 from garecovery.recoverycli import main
-from garecovery import clargs
-from gaservices.utils import txutil
-import wallycore as wally
+from garecovery.clargs import DEFAULT_OFILE
+from gaservices.utils import txutil, gaconstants
 
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 
 
+# Patch os.path.exists so that it returns False whenever asked if the default output file exists,
+# otherwise all tests will fail by default
+def path_exists(filename):
+    if filename == DEFAULT_OFILE:
+        return False
+    return _path_exists(filename)
+
+
+_path_exists = os.path.exists
+
+
+# Do not read bitcoin config files from filesystem during testing
+def raise_IOError(*args):
+    raise IOError()
+
+
 def datafile(filename):
     return os.path.join(TEST_DATA_DIR, filename)
+
+
+def read_datafile(filename):
+    return open(datafile(filename)).read().strip()
 
 
 def accumulate_widths(iterable):
@@ -139,7 +158,7 @@ def get_output(args, expect_error=False):
     else:
         # In legacy mode if you did not pass --show-summary you got raw output depending on the
         # recovery mode. Can use the csv output to reconstruct it
-        csv_content = ofiles[clargs.DEFAULT_OFILE]
+        csv_content = ofiles[DEFAULT_OFILE]
         csv_ = csv.DictReader(io.StringIO(csv_content))
         if two_of_three:
             # simply the raw transactions
@@ -169,3 +188,64 @@ def verify_txs(txs, utxos, expect_witness):
         tx = txs[idx]
         spending_tx = txutil.from_hex(''.join(utxo.split()))
         # FIXME: Test that spending_tx is signed correctly
+
+
+class AuthServiceProxy:
+    """Mock bitcoincore"""
+
+    def __init__(self, txfile):
+        self.tx_by_id = {}
+        self.txout_by_address = {}
+        for line in open(datafile(txfile)).readlines():
+            tx = txutil.from_hex(line.strip())
+            self.tx_by_id[txutil.get_txhash_bin(tx)] = tx
+            for i in range(wally.tx_get_num_outputs(tx)):
+                addr = txutil.get_output_address(tx, i, gaconstants.ADDR_VERSIONS_TESTNET,
+                                                 gaconstants.ADDR_FAMILY_TESTNET)
+                self.txout_by_address[addr] = (tx, i)
+        self.imported = {}
+
+        # This is something of a workaround because all the existing tests are based on generating
+        # txs where nlocktime was fixed as 0. The code changed to use current blockheight, so by
+        # fudging this value to 0 the existing tests don't notice the difference
+        self.getblockcount.return_value = 0
+
+        self.getnetworkinfo.return_value = {'version': 160000}
+
+    def importmulti(self, requests):
+        result = []
+        for request in requests:
+            assert request['watchonly'] is True
+            address = request['scriptPubKey']['address']
+            if address in self.txout_by_address:
+                self.imported[address] = self.txout_by_address[address]
+            result.append({'success': True})
+        return result
+
+    def _get_unspent(self, address):
+        imported = self.imported.get(address, None)
+        if imported is None:
+            return None
+        tx, i = imported
+        script = wally.tx_get_output_script(tx, i)
+        return {
+            "txid": txutil.get_txhash_bin(tx),
+            "vout": i,
+            "address": address,
+            "scriptPubKey": wally.hex_from_bytes(script)
+        }
+
+    def listunspent(self, minconf, maxconf, addresses):
+        unspent = [self._get_unspent(address) for address in addresses]
+        return [x for x in unspent if x]
+
+    def getrawtransaction(self, txid):
+        return txutil.to_hex(self.tx_by_id[txid])
+
+    def batch_(self, requests):
+        return [getattr(self, call)(params) for call, params in requests]
+
+    estimatesmartfee = mock.Mock()
+    getblockcount = mock.Mock()
+    getnewaddress = mock.Mock()
+    getnetworkinfo = mock.Mock()
