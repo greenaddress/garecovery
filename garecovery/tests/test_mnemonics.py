@@ -2,7 +2,8 @@
 
 import mock
 
-from .util import datafile, get_output_ex, read_datafile
+import garecovery.two_of_three
+from .util import AuthServiceProxy, datafile, get_output, get_output_ex, read_datafile
 
 
 def test_encrypted_mnemonic():
@@ -23,3 +24,30 @@ def test_encrypted_mnemonic():
                 assert read_datafile("signed_2of2_1") in ofiles['garecovery.csv']
             else:
                 assert 'Incorrect password' in output
+
+
+@mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
+def test_invalid_mnemonic(mock_bitcoincore):
+    """Test invalid mnemonic"""
+    mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
+
+    args = [
+        '2of3',
+        '--network=testnet',
+        '--key-search-depth=5',
+        '--search-subaccounts=10',
+        '--destination-address=mynHfTyTWyGGB76NBFbfUrTnn8YWQkTJVs',
+    ]
+
+    for mnemonic, recovery_mnemonic, expected_error in [
+        ('mnemonic_1.txt', 'invalid_word.txt', 'Invalid word: mont'),
+        ('invalid_checksum.txt', 'mnemonic_2.txt', 'Invalid mnemonic checksum'),
+        ('mnemonic_1.txt', 'invalid_hex_seed.txt', 'hex seed must end with X'),
+    ]:
+        additional_args = [
+            '--mnemonic-file={}'.format(datafile(mnemonic)),
+            '--recovery-mnemonic-file={}'.format(datafile(recovery_mnemonic)),
+        ]
+
+        output = get_output(args + additional_args, expect_error=True)
+        assert expected_error in output

@@ -3,6 +3,10 @@ import wallycore as wally
 from . import exceptions
 
 
+wordlist_ = wally.bip39_get_wordlist('en')
+wordlist = [wally.bip39_get_word(wordlist_, i) for i in range(2048)]
+
+
 def seed_from_mnemonic(mnemonic_or_hex_seed):
     """Return seed, mnemonic given an input string
 
@@ -45,3 +49,23 @@ def _decrypt_mnemonic(mnemonic, password):
     if wally.sha256d(decrypted)[:4] != salt:
         raise exceptions.InvalidMnemonicOrPasswordError('Incorrect password')
     return wally.bip39_mnemonic_from_bytes(None, decrypted)
+
+
+def check_mnemonic_or_hex_seed(mnemonic):
+    """Raise an error if mnemonic/hex seed is invalid"""
+    if ' ' not in mnemonic:
+        if mnemonic.endswith('X'):
+            # mnemonic is the hex seed
+            return
+        msg = 'Mnemonic words must be separated by spaces, hex seed must end with X'
+        raise exceptions.InvalidMnemonicOrPasswordError(msg)
+
+    for word in mnemonic.split():
+        if word not in wordlist:
+            msg = 'Invalid word: {}'.format(word)
+            raise exceptions.InvalidMnemonicOrPasswordError(msg)
+
+    try:
+        wally.bip39_mnemonic_validate(None, mnemonic)
+    except ValueError:
+        raise exceptions.InvalidMnemonicOrPasswordError('Invalid mnemonic checksum')

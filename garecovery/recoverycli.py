@@ -7,7 +7,8 @@ import wallycore as wally
 from . import clargs
 from . import exceptions
 from . import formatting
-from .mnemonic import _decrypt_mnemonic, seed_from_mnemonic, wallet_from_mnemonic
+from .mnemonic import (check_mnemonic_or_hex_seed, _decrypt_mnemonic, seed_from_mnemonic,
+                       wallet_from_mnemonic)
 
 from .two_of_two import TwoOfTwo
 from .two_of_three import TwoOfThree
@@ -33,7 +34,9 @@ def get_mnemonic(args, attr='mnemonic_file', prompt='mnemonic/hex seed: '):
         password = user_input('mnemonic password: ')
         return _decrypt_mnemonic(mnemonic, password)
 
-    return ' '.join(mnemonic.split())
+    mnemonic = ' '.join(mnemonic.split())
+    check_mnemonic_or_hex_seed(mnemonic)
+    return mnemonic
 
 
 def get_recovery_mnemonic(args):
