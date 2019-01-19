@@ -59,9 +59,10 @@ def gait_paths_from_seed(seed):
     """Get the paths for deriving the GreenAddress xpubs from a hex seed, rather than mnemonic
 
     This is an alternative derivation path used with hardware wallets where the mnemonic may not
-    be available. It is based on a hardened public key derived from the backed up hw wallet seed.
+    be available. It is based on a hardened public key derived from the backed up hw wallet seed
+    or on the master public key itself.
 
-    Returns two possible paths corresponding to two different client implementations.
+    Returns three possible paths corresponding to three different client implementations.
     """
     assert len(seed) == wally.BIP39_SEED_LEN_512
 
@@ -81,7 +82,11 @@ def gait_paths_from_seed(seed):
     # For historic reasons some old clients use a hexlified input path here - generate both
     path_input = chain_code + pub_key
     path_input_hex = bytearray(wally.hex_from_bytes(chain_code + pub_key), 'ascii')
-    return [get_gait_path(path_input) for path_input in [path_input, path_input_hex]]
+    # Some clients use the master public key instead of one hardened derived from it
+    chain_code_m = wally.bip32_key_get_chain_code(root_key)
+    pub_key_m = wally.bip32_key_get_pub_key(root_key)
+    path_input_m = chain_code_m + pub_key_m
+    return [get_gait_path(path_input) for path_input in [path_input, path_input_hex, path_input_m]]
 
 
 def xpubs_from_mnemonic(mnemonic, subaccount, network):

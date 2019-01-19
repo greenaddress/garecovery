@@ -133,7 +133,8 @@ def test_standard_summary_old_nlocktimes():
 
 @mock.patch('garecovery.bitcoincore.AuthServiceProxy', None)
 def test_seed_gait_derivation():
-    """Wallets created using a hardware wallet use a different algorithm to derive the gait path"""
+    """Wallets created using a hardware wallet or some desktop apps use a different algorithm to
+    derive the gait path"""
     output = get_output([
         '--mnemonic-file={}'.format(datafile('mnemonic_hw_2.txt')),
         '--show-summary',
@@ -144,6 +145,17 @@ def test_seed_gait_derivation():
     summary = parse_summary(output)
     assert len(summary) == 1
     assert summary[0]['destination address'] == 'n2XzrydLuz1cAdP9m4tRrv98LNVfu9Q5u8'
+
+    output = get_output([
+        '--mnemonic-file={}'.format(datafile('mnemonic_13.txt')),
+        '--show-summary',
+        '2of2',
+        '--network=testnet',
+        '--nlocktime-file={}'.format(datafile('nlocktimes_4.zip')),
+    ])
+    summary = parse_summary(output)
+    assert len(summary) == 1
+    assert summary[0]['destination address'] == 'mrXuMiFkjQDBdCX1MkpkQoACXsnEApfUDa'
 
 
 @pytest.mark.parametrize("current_blockcount, nlocktime_message", [
