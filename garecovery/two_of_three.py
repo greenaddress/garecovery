@@ -157,11 +157,11 @@ class UTXO:
 
         blocks = clargs.args.fee_estimate_blocks
 
-        fee_btc_kb = core.estimatesmartfee(blocks)['feerate']
-        if fee_btc_kb == -1:
-            # estimatesmartfee returns -1 to indicate it is unable to provide a fee estimate
+        estimate = core.estimatesmartfee(blocks)
+        if 'errors' in estimate:
             fee_satoshi_byte = self.get_default_feerate()
         else:
+            fee_btc_kb = estimate['feerate']
             fee_satoshi_kb = fee_btc_kb * gaconstants.SATOSHI_PER_BTC
             fee_satoshi_byte = round(fee_satoshi_kb / 1000)
 

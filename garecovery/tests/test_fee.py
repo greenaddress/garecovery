@@ -110,12 +110,12 @@ def test_fee_calculation_with_estimate(mock_bitcoincore):
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_fee_calculation_default_feerate(mock_bitcoincore):
-    """Test fee calculation where estimatesmartfee return -1"""
+    """Test fee calculation where estimatesmartfee returns an error"""
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
 
-    # estimatesmartfee returns -1 if there is not estimate available
+    # estimatesmartfee returns an error if there is not estimate available
     # In this case should fall back to the default
-    estimate = {'blocks': 3, 'feerate': decimal.Decimal(-1)}
+    estimate = {'blocks': 3, 'errors': 'Insufficient data or no feerate found'}
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
     expect_feerate(default_feerate)
@@ -151,7 +151,7 @@ def test_fee_calculation_segwit(mock_bitcoincore):
 def test_no_feerate(mock_bitcoincore):
     """Test that feerate must be explicitly provided if not provided by estimatesmartfee"""
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
-    estimate = {'blocks': 3, 'feerate': decimal.Decimal(-1)}
+    estimate = {'blocks': 3, 'errors': 'Insufficient data or no feerate found'}
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
     args = [
@@ -194,9 +194,10 @@ def test_no_feerate_mainnet(mock_bitcoincore):
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_fee_calculation_default_feerate_option(mock_bitcoincore):
-    """Test fee calculation where estimatesmartfee return -1 and user provides --default-feerate"""
+    """Test fee calculation where estimatesmartfee returns an error and user provides
+    --default-feerate"""
     mock_bitcoincore.return_value = AuthServiceProxy('raw_2of3_tx_1')
-    estimate = {'blocks': 3, 'feerate': decimal.Decimal(-1)}
+    estimate = {'blocks': 3, 'errors': 'Insufficient data or no feerate found'}
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
     default_feerate = 123

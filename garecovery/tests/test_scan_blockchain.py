@@ -19,7 +19,7 @@ def test_scan_blockchain(mock_bitcoincore):
     """Test scanning the blockchain via mocked core"""
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
 
-    estimate = {'blocks': 3, 'feerate': -1, }
+    estimate = {'blocks': 3, 'errors': 'Insufficient data or no feerate found', }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
     # Return a fake fixed unspent which happens to match the scriptPubKey
