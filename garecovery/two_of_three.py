@@ -271,12 +271,13 @@ class TwoOfThree(object):
         logging.debug("Connecting to bitcoinrpc to scan blockchain")
         core = bitcoincore.Connection(clargs.args)
 
-        if core.getnetworkinfo()["version"] == 170000 and clargs.args.ignore_mempool:
+        version = core.getnetworkinfo()["version"]
+        if version >= 170000 and version <= 170100 and clargs.args.ignore_mempool:
             logging.warning('Mempool transactions are being ignored')
-            # If the node is running version 0.17.0 and
+            # If the node is running version 0.17.0 or 0.17.1 and
             # the user does not want to scan the mempool, then use
             # scantxoutset, otherwise fall back to importmulti + listunspent
-            # FIXME: check for format changes in 0.17.1
+            # FIXME: check for format changes in 0.17.2
 
             scanobjects = []
             for keyset in keysets:
