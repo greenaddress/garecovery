@@ -2,8 +2,8 @@ cache:
   paths:
   - deps_cache
 
-test_recoverycli_py3:
-  image: greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2
+test_recoverycli_py3_buster:
+  image: greenaddress/wallycore@sha256:654e5939446bfa8f33966031e768f6600e1d627b598e738e1d8f8427370786c7
   tags:
     - ga
   script:
@@ -19,7 +19,23 @@ test_recoverycli_py3:
       - dist
 
 test_recoverycli_py3_u18_04:
-  image: greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536
+  image: greenaddress/wallycore@sha256:059eeaa5c61df5403fd28d6ea556c317d5809f7274e27901d0f09288a316bb53
+  tags:
+    - ga
+  script:
+    - cd $CI_PROJECT_DIR
+    - virtualenv -p python3 venv
+    - source venv/bin/activate
+    - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
+    - ./tools/dobuild.sh
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - htmlcov
+      - dist
+
+test_recoverycli_py3_u19_04:
+  image: greenaddress/wallycore@sha256:dd66cf18815756de37238c5fdfafc38c80076ce93d9ce644e517143894f24350
   tags:
     - ga
   script:
@@ -37,7 +53,7 @@ test_recoverycli_py3_u18_04:
 pages:
     stage: deploy
     dependencies:
-      - test_recoverycli_py3
+      - test_recoverycli_py3_buster
     script:
       - mv htmlcov/ public/
     artifacts:
