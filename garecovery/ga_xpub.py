@@ -7,8 +7,13 @@ from . import exceptions
 
 
 def get_bip32_pubkey(chaincode, key, network):
-    """Return a bip32 public key which can be either mainnet or testnet"""
-    ver = {'testnet': wally.BIP32_VER_TEST_PUBLIC, 'mainnet': wally.BIP32_VER_MAIN_PUBLIC}[network]
+    """Return a bip32 public key for the given network"""
+    ver = {
+        'testnet': wally.BIP32_VER_TEST_PUBLIC,
+        'mainnet': wally.BIP32_VER_MAIN_PUBLIC,
+        'liquid': wally.BIP32_VER_MAIN_PUBLIC,
+        'localtest-liquid': wally.BIP32_VER_TEST_PUBLIC,
+    }[network]
     public_key = key
     private_key = None
     return wally.bip32_key_init(ver, 0, 0, chaincode, public_key, private_key, None, None)
