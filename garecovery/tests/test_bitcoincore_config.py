@@ -184,3 +184,20 @@ def test_too_old_version(mock_bitcoincore):
 
     output = get_output(args, expect_error=True)
     assert 'Bitcoin Core version too old, minimum supported version 0.16.0' in output
+
+
+@mock.patch('garecovery.liquid_recovery.bitcoincore.AuthServiceProxy')
+def test_too_old_version_liquid(mock_bitcoincore):
+    """Test Liquid asset recovery"""
+    mock_bitcoincore.return_value = AuthServiceProxy('liquid_txs', is_liquid=True)
+    mock_bitcoincore.return_value.getnetworkinfo = mock.Mock(return_value={'version': 169900})
+
+    args = [
+        '--mnemonic-file={}'.format(datafile('mnemonic_1.txt')),
+        'csv',
+        '--network=localtest-liquid',
+        '--search-subaccounts={}'.format(sub_depth),
+    ]
+
+    output = get_output(args, expect_error=True, is_liquid=True)
+    assert 'Unsupported version' in output
