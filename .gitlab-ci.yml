@@ -2,22 +2,6 @@ cache:
   paths:
   - deps_cache
 
-test_recoverycli:
-  image: greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2
-  tags:
-    - ga
-  script:
-    - cd $CI_PROJECT_DIR
-    - virtualenv -p python2 venv
-    - source venv/bin/activate
-    - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
-    - ./tools/dobuild.sh
-  artifacts:
-    expire_in: 1 hour
-    paths:
-      - htmlcov
-      - dist
-
 test_recoverycli_py3:
   image: greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2
   tags:
@@ -25,22 +9,6 @@ test_recoverycli_py3:
   script:
     - cd $CI_PROJECT_DIR
     - virtualenv -p python3 venv
-    - source venv/bin/activate
-    - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
-    - ./tools/dobuild.sh
-  artifacts:
-    expire_in: 1 hour
-    paths:
-      - htmlcov
-      - dist
-
-test_recoverycli_py2_u18_04:
-  image: greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536
-  tags:
-    - ga
-  script:
-    - cd $CI_PROJECT_DIR
-    - virtualenv -p python2 venv
     - source venv/bin/activate
     - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
     - ./tools/dobuild.sh
@@ -69,7 +37,7 @@ test_recoverycli_py3_u18_04:
 pages:
     stage: deploy
     dependencies:
-      - test_recoverycli
+      - test_recoverycli_py3
     script:
       - mv htmlcov/ public/
     artifacts:
@@ -78,22 +46,6 @@ pages:
       expire_in: 30 days
     only:
       - master
-
-test_osx:
-  tags:
-    - osx
-  script:
-    - cd $CI_PROJECT_DIR
-    - virtualenv -p python venv
-    - source venv/bin/activate
-    - pip install --upgrade setuptools pip
-    - pip install --require-hashes -r tools/requirements_dev.txt --cache-dir deps_cache
-    - ./tools/dobuild.sh
-  artifacts:
-    expire_in: 1 hour
-    paths:
-      - htmlcov
-      - dist
 
 test_osx_py3:
   tags:

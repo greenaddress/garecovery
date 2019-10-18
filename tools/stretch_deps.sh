@@ -5,7 +5,7 @@ sed -i 's/deb.debian.org/httpredir.debian.org/g' /etc/apt/sources.list
 
 apt-get update -qq
 apt-get upgrade -yqq
-apt-get install python{,3}-pip python{,3}-dev build-essential python{,3}-virtualenv -yqq
+apt-get install python3-pip python3-dev build-essential python3-virtualenv -yqq
 if [ -f /.dockerenv ]; then
     apt-get -yqq autoremove
     apt-get -yqq clean

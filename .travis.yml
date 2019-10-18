@@ -5,7 +5,5 @@ services:
   - docker
 
 script:
-  - docker run -v $PWD:/recovery greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2 /bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements_dev.txt && ./tools/dobuild.sh && rm -fr venv"
   - docker run -v $PWD:/recovery greenaddress/recovery@sha256:49e0a0839a46907b514299ea976a7612bea19c31469435fb767c50366c48cee2 /bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements_dev.txt && ./tools/dobuild.sh && rm -fr venv"
-  - docker run -v $PWD:/recovery greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536 /bin/bash -c "cd /recovery && virtualenv -p python2 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements_dev.txt && ./tools/dobuild.sh && rm -fr venv"
   - docker run -v $PWD:/recovery greenaddress/recovery@sha256:504d934fe0a1ab103f3b30950c2fe6c075f8aa4f5afc66450f24209c4f215536 /bin/bash -c "cd /recovery && virtualenv -p python3 venv && source venv/bin/activate && pip install --require-hashes -r tools/requirements_dev.txt && ./tools/dobuild.sh && rm -fr venv"
