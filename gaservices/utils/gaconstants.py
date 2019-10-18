@@ -12,7 +12,10 @@ MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 # BIP32 hardened derivation flag
 HARDENED = 0x80000000
 
-SUPPORTED_NETWORKS = ['mainnet', 'testnet', 'liquid', 'localtest-liquid']
+SUPPORTED_NETWORKS = {
+    False: ['mainnet', 'testnet'],
+    True: ['liquid', 'localtest-liquid']
+}
 
 P2PKH_MAINNET = 0x00
 P2SH_MAINNET = 0x05

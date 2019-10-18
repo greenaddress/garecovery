@@ -122,3 +122,7 @@ def derive_user_private_key(txdata, wallet, branch):
     pointer = txdata['prevout_pointers'][0] or 0
     path = get_subaccount_path(subaccount)
     return derive_hd_key(wallet, path + [branch, pointer])
+
+
+def is_liquid(network):
+    return network in ['liquid', 'localtest-liquid']

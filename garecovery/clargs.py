@@ -20,29 +20,35 @@ DEFAULT_FEE_ESTIMATE_BLOCKS = 6
 DEFAULT_OFILE = 'garecovery.csv'
 
 
+SUBACCOUNT_TYPES = {
+    False: ['2of2', '2of3'],
+    True: ['csv'],
+}
+
+
 args = None
 
 
-def set_args(argv):
+def set_args(argv, is_liquid=False):
     global args
-    args = get_args(argv)
+    args = get_args(argv, is_liquid)
 
 
-def get_args(argv):
+def get_args(argv, is_liquid=False):
     parser = argparse.ArgumentParser(
         description="GreenAddress command line recovery tool",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
         'recovery_mode',
-        choices=['2of2', '2of3'],
-        default='2of2',
+        choices=SUBACCOUNT_TYPES[is_liquid],
+        default=SUBACCOUNT_TYPES[is_liquid][0],
         help='Type of recovery to perform')
     parser.add_argument(
         '-n', '--network',
         dest='network',
-        choices=gaconstants.SUPPORTED_NETWORKS,
-        default='mainnet',
+        choices=gaconstants.SUPPORTED_NETWORKS[is_liquid],
+        default=gaconstants.SUPPORTED_NETWORKS[is_liquid][0],
         help="Network the coins belong to")
     parser.add_argument(
         '--mnemonic-file',
@@ -78,7 +84,8 @@ def get_args(argv):
         help="Be verbose",
         action="store_const", dest="loglevel", const=logging.INFO)
 
-    rpc = parser.add_argument_group('Bitcoin RPC options')
+    rpc = parser.add_argument_group(
+        ('Elements' if is_liquid else 'Bitcoin') + ' RPC options')
 
     rpc.add_argument(
         '--rpcuser',
@@ -105,73 +112,100 @@ def get_args(argv):
         type=int,
         help='Timeout in minutes for rpc calls')
 
-    two_of_two = parser.add_argument_group('2of2 options')
-    two_of_two.add_argument(
-        '--nlocktime-file',
-        help='Name of the nlocktime file sent from GreenAddress')
+    kwargs_option_search_subaccounts = {
+        'dest': 'search_subaccounts',
+        'nargs': '?',
+        'const': DEFAULT_SUBACCOUNT_SEARCH_DEPTH,
+        'type': int,
+        'help': 'Number of subaccounts to search for',
+    }
+    kwargs_option_key_search_depth = {
+        'dest': 'key_search_depth',
+        'type': int,
+        'default': DEFAULT_KEY_SEARCH_DEPTH,
+        'help': 'When scanning for transactions search this number of keys',
+    }
+    kwargs_option_scan_from = {
+        'dest': 'scan_from',
+        'type': int,
+        'default': DEFAULT_SCAN_FROM,
+        'help': 'Start scanning the blockchain for transactions from this timestamp. '
+                'Scanning the blockchain is slow so if you know your transactions were all after '
+                'a certain date you can speed it up by restricting the search range with this '
+                'option. Defaults to the inception time of GreenAddress. Pass 0 to scan the entire '
+                'blockchain.',
+    }
 
-    two_of_three = parser.add_argument_group('2of3 options')
-    two_of_three.add_argument(
-        '--destination-address',
-        help='An address to recover 2of3 transactions to')
+    if is_liquid:
+        csv = parser.add_argument_group('CSV options')
+        csv.add_argument('--search-subaccounts', **kwargs_option_search_subaccounts)
 
-    two_of_three_xpub_exclusive = two_of_three.add_mutually_exclusive_group(required=False)
-    two_of_three_xpub_exclusive.add_argument(
-        '--ga-xpub',
-        help='The GreenAddress extended public key. If not provided the recovery tool will '
-             'attempt to derive it')
-    two_of_three_xpub_exclusive.add_argument(
-        '--search-subaccounts',
-        nargs='?',
-        const=DEFAULT_SUBACCOUNT_SEARCH_DEPTH,
-        type=int,
-        help='If --ga-xpub is not known it is possible to search subaccounts using this option')
+        advanced_csv = parser.add_argument_group('CSV advanced options')
+        advanced_csv.add_argument('--key-search-depth', **kwargs_option_key_search_depth)
+        advanced_csv.add_argument('--scan-from', **kwargs_option_scan_from)
+        advanced_csv.add_argument(
+            '--split-unblinded-inputs',
+            dest='split_unblinded_inputs',
+            action='store_true',
+            help='If any unblinded input is found, split the inputs in two transactions, '
+                 'one with blinded inputs and the other with the remaining. '
+                 'Note that, if one of the two sets does not contain enough l-btc for the fees, '
+                 'the tool may not be able to create the transaction.')
+    else:
+        two_of_two = parser.add_argument_group('2of2 options')
+        two_of_two.add_argument(
+            '--nlocktime-file',
+            help='Name of the nlocktime file sent from GreenAddress')
 
-    two_of_three_backup_key_exclusive = two_of_three.add_mutually_exclusive_group(required=False)
-    two_of_three_backup_key_exclusive.add_argument(
-        '--recovery-mnemonic-file',
-        dest='recovery_mnemonic_file',
-        help="Name of file containing the user's recovery mnemonic (2 of 3)")
-    two_of_three_backup_key_exclusive.add_argument(
-        '--custom-xprv',
-        help='Custom xprv (extended private key) for the 2of3 account. '
-             'Only required if an xpub was specified when creating the subaccount')
+        two_of_three = parser.add_argument_group('2of3 options')
+        two_of_three.add_argument(
+            '--destination-address',
+            help='An address to recover 2of3 transactions to')
 
-    advanced_2of3 = parser.add_argument_group('2of3 advanced options')
-    advanced_2of3.add_argument(
-        '--key-search-depth',
-        type=int,
-        default=DEFAULT_KEY_SEARCH_DEPTH,
-        help='When scanning for 2of3 transactions search this number of keys')
-    advanced_2of3.add_argument(
-        '--scan-from',
-        type=int,
-        dest='scan_from',
-        default=DEFAULT_SCAN_FROM,
-        help='Start scanning the blockchain for transactions from this timestamp. '
-             'Scanning the blockchain is slow so if you know your transactions were all after '
-             'a certain date you can speed it up by restricting the search range with this '
-             'option. Defaults to the inception time of GreenAddress. Pass 0 to scan the entire '
-             'blockchain.')
-    advanced_2of3.add_argument(
-        '--fee-estimate-blocks',
-        dest='fee_estimate_blocks',
-        type=int,
-        default=DEFAULT_FEE_ESTIMATE_BLOCKS,
-        help='Use a transaction fee likely to result in a transaction being '
-             'confirmed in this many blocks minimum')
-    advanced_2of3.add_argument(
-        '--default-feerate',
-        dest='default_feerate',
-        type=int,
-        help='Fee rate (satoshis per byte) to use if unable to automatically get one')
+        two_of_three_xpub_exclusive = two_of_three.add_mutually_exclusive_group(required=False)
+        two_of_three_xpub_exclusive.add_argument(
+            '--ga-xpub',
+            help='The GreenAddress extended public key. If not provided the recovery tool will '
+                 'attempt to derive it')
 
-    advanced_2of3.add_argument(
-        '--ignore-mempool',
-        dest='ignore_mempool',
-        action='store_true',
-        help='Ignore the mempool when scanning the UTXO set for 2of3 transactions. '
-             'This enables the use of scantxoutset which makes recovery much faster.')
+        kwargs_option_search_subaccounts['help'] += \
+            '; if --ga-xpub is not known it is possible to search subaccounts using this option'
+        two_of_three_xpub_exclusive.add_argument(
+            '--search-subaccounts', **kwargs_option_search_subaccounts)
+
+        two_of_three_backup_key_exclusive = two_of_three.add_mutually_exclusive_group(
+            required=False)
+        two_of_three_backup_key_exclusive.add_argument(
+            '--recovery-mnemonic-file',
+            dest='recovery_mnemonic_file',
+            help="Name of file containing the user's recovery mnemonic (2 of 3)")
+        two_of_three_backup_key_exclusive.add_argument(
+            '--custom-xprv',
+            help='Custom xprv (extended private key) for the 2of3 account. '
+                 'Only required if an xpub was specified when creating the subaccount')
+
+        advanced_2of3 = parser.add_argument_group('2of3 advanced options')
+        advanced_2of3.add_argument('--key-search-depth', **kwargs_option_key_search_depth)
+        advanced_2of3.add_argument('--scan-from', **kwargs_option_scan_from)
+        advanced_2of3.add_argument(
+            '--fee-estimate-blocks',
+            dest='fee_estimate_blocks',
+            type=int,
+            default=DEFAULT_FEE_ESTIMATE_BLOCKS,
+            help='Use a transaction fee likely to result in a transaction being '
+                 'confirmed in this many blocks minimum')
+        advanced_2of3.add_argument(
+            '--default-feerate',
+            dest='default_feerate',
+            type=int,
+            help='Fee rate (satoshis per byte) to use if unable to automatically get one')
+
+        advanced_2of3.add_argument(
+            '--ignore-mempool',
+            dest='ignore_mempool',
+            action='store_true',
+            help='Ignore the mempool when scanning the UTXO set for 2of3 transactions. '
+                 'This enables the use of scantxoutset which makes recovery much faster.')
 
     argcomplete.autocomplete(parser)
     result = parser.parse_args(argv[1:])
@@ -189,13 +223,15 @@ def get_args(argv):
         if optval(name) is not None:
             parser.error('%s not allowed for mode %s' % (name, result.recovery_mode))
 
+    if is_liquid:
+        return result
+
     if result.recovery_mode == '2of2':
         arg_required('--nlocktime-file')
         for arg in ['--destination-address', '--ga-xpub', '--search-subaccounts',
                     '--recovery-mnemonic-file', '--custom-xprv', '--default-feerate']:
             arg_disallowed(arg)
-
-    elif result.recovery_mode == '2of3':
+    else:
         arg_disallowed('--nlocktime-file')
         arg_required('--destination-address')
         if optval('search_subaccounts') is None:

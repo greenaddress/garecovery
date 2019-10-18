@@ -10,6 +10,10 @@ class ImportMultiError(GARecoveryError):
     pass
 
 
+class InsufficientFee(GARecoveryError):
+    pass
+
+
 class InvalidDestinationAddressError(GARecoveryError):
     pass
 
@@ -19,6 +23,18 @@ class InvalidMnemonicOrPasswordError(GARecoveryError):
 
 
 class InvalidNetwork(GARecoveryError):
+    pass
+
+
+class InvalidPrivateKey(GARecoveryError):
+    pass
+
+
+class InvalidPublicKey(GARecoveryError):
+    pass
+
+
+class MempoolRejectionError(GARecoveryError):
     pass
 
 

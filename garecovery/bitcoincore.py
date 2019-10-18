@@ -5,6 +5,7 @@ import socket
 
 from . import bitcoin_config
 from . import exceptions
+from gaservices.utils import gacommon
 
 import bitcoinrpc.authproxy
 
@@ -54,7 +55,7 @@ class Connection:
 
     @staticmethod
     def read_config(keys, options):
-        config = bitcoin_config.Config(options.config_filename)
+        config = bitcoin_config.Config(options.config_filename, gacommon.is_liquid(options.network))
         return {key: config.get_val(key) for key in keys}
 
     @staticmethod
@@ -75,6 +76,8 @@ class Connection:
                 default_rpc_cookies = {
                     'testnet': '~/.bitcoin/testnet3/.cookie',
                     'mainnet': '~/.bitcoin/.cookie',
+                    'liquid': '~/.elements/liquidv1/.cookie',
+                    'localtest-liquid': '~/.elements/elementsregtest/.cookie',
                 }
                 rpccookiefile = os.path.expanduser(default_rpc_cookies[network])
             logging.info('Reading bitcoin authentication cookie from "{}"'.format(rpccookiefile))
@@ -105,6 +108,8 @@ class Connection:
             default_rpc_ports = {
                 'testnet': 18332,
                 'mainnet': 8332,
+                'liquid': 7041,
+                'localtest-liquid': 7040,
             }
             config['rpcport'] = default_rpc_ports[args.network]
             logging.info('Defaulting rpc port to {}'.format(config['rpcport']))

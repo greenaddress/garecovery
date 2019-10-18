@@ -2,7 +2,7 @@
 import collections
 import sys
 import wallycore as wally
-from gaservices.utils import gaconstants, txutil
+from gaservices.utils import gaconstants, txutil, gacommon
 
 from . import clargs
 from . import util
@@ -132,9 +132,13 @@ class SummaryFormatter(Formatter):
             return format_nlocktime_string(current_blockcount, wally.tx_get_locktime(tx_wif[0]))
 
         def get_coin_value(tx_wif, idx):
+            if gacommon.is_liquid(clargs.args.network):
+                return '-'
             return btc(wally.tx_get_output_satoshi(tx_wif[0], idx), units)
 
         def get_total_value(tx_wif, idx):
+            if gacommon.is_liquid(clargs.args.network):
+                return '-'
             return btc(wally.tx_get_total_output_satoshi(tx_wif[0]), units)
 
         def get_bitcoin_address(tx_wif, idx):
@@ -189,7 +193,8 @@ class CsvFormatter(SummaryFormatter):
         where value is <= 0 are shown as dust.
         """
         def get_raw_tx_or_dust(tx_wif, _):
-            if wally.tx_get_total_output_satoshi(tx_wif[0]) == 0:
+            if not gacommon.is_liquid(clargs.args.network) and \
+                    wally.tx_get_total_output_satoshi(tx_wif[0]) == 0:
                 return '** dust **'
             return txutil.to_hex(tx_wif[0])
         return Column('raw tx', get_raw_tx_or_dust)

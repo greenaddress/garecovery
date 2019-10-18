@@ -106,7 +106,7 @@ class ContextualStringIO(io.StringIO):
         return False
 
 
-def get_output_ex(args, expect_error=False):
+def get_output_ex(args, expect_error=False, is_liquid=False):
     ofiles = {}
 
     def recovery_open_(filename, mode=None):
@@ -120,7 +120,7 @@ def get_output_ex(args, expect_error=False):
 
     with mock.patch('garecovery.recoverycli.open', side_effect=recovery_open_):
         with mock.patch('sys.stdout', io.StringIO()) as output:
-            result = main([sys.argv[0], ] + args)
+            result = main([sys.argv[0], ] + args, is_liquid)
             if expect_error:
                 assert result != 0, output.getvalue()
             else:
@@ -131,7 +131,7 @@ def get_output_ex(args, expect_error=False):
         return output.getvalue(), ofiles
 
 
-def get_output(args, expect_error=False):
+def get_output(args, expect_error=False, is_liquid=False):
     """Patch sys.stdout and call main with args capturing the output
 
     This is now a legacy call for backwards compatibility of old tests
@@ -147,7 +147,7 @@ def get_output(args, expect_error=False):
                 two_of_three = True
         filtered_args.append(arg)
 
-    output, ofiles = get_output_ex(filtered_args, expect_error)
+    output, ofiles = get_output_ex(filtered_args, expect_error, is_liquid)
 
     if expect_error:
         return output

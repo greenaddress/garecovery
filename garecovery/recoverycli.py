@@ -4,6 +4,7 @@ import sys
 
 import wallycore as wally
 
+from gaservices.utils.gacommon import is_liquid
 from . import clargs
 from . import exceptions
 from . import formatting
@@ -12,6 +13,7 @@ from .mnemonic import (check_mnemonic_or_hex_seed, _decrypt_mnemonic, seed_from_
 
 from .two_of_two import TwoOfTwo
 from .two_of_three import TwoOfThree
+from .liquid_recovery import LiquidRecovery
 
 
 # Python 2/3 compatibility
@@ -44,8 +46,13 @@ def get_recovery_mnemonic(args):
 
 
 def get_recovery(options, mnemonic, seed):
-    """Return an instance of either TwoOfTwo or TwoOfThree, depending on options"""
-    if options.recovery_mode == '2of3':
+    """Return an instance of either TwoOfTwo, TwoOfThree or LiquidRecovery, depending on options"""
+    if options.recovery_mode == 'csv':
+        if is_liquid(options.network):
+            return LiquidRecovery(mnemonic)
+        raise exceptions.InvalidNetwork(
+            'recovery method {} is not available for this network'.format(options.recovery_mode))
+    elif options.recovery_mode == '2of3':
         # Passing BIP32_VER_MAIN_PRIVATE although it may be on TEST. It doesn't make any difference
         # because they key is not going to be serialized
         version = wally.BIP32_VER_MAIN_PRIVATE
@@ -61,11 +68,11 @@ def get_recovery(options, mnemonic, seed):
         return TwoOfTwo(mnemonic, seed, options.nlocktime_file)
 
 
-def main(argv=None):
+def main(argv=None, is_liquid=False):
     wally.init(0)
     wally.secp_randomize(os.urandom(wally.WALLY_SECP_RANDOMIZE_LEN))
 
-    clargs.set_args(argv or sys.argv)
+    clargs.set_args(argv or sys.argv, is_liquid)
     logging.basicConfig(level=clargs.args.loglevel)
 
     try:

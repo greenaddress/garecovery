@@ -10,6 +10,9 @@ setup(name='greenaddress-recovery',
       packages=find_packages(),
       tests_require=['pytest', 'pytest-cov', 'mock', 'pycodestyle', ],
       setup_requires=['pytest-runner', ],
-      scripts=['garecovery/bin/garecovery-cli', ],
+      scripts=[
+          'garecovery/bin/garecovery-cli',
+          'garecovery/bin/garecovery-liquid-cli',
+      ],
       include_package_data=True,
       zip_safe=False)

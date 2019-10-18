@@ -10,16 +10,19 @@ except ImportError:
     import configparser
 
 
-DEFAULT_CONFIG_FILENAME = "~/.bitcoin/bitcoin.conf"
+DEFAULT_CONFIG_FILENAME = {
+    False: "~/.bitcoin/bitcoin.conf",
+    True: "~/.elements/elements.conf",
+}
 DUMMY_SECTION = 'X'
 
 
 class Config:
     """Parse bitcoin configuration file"""
 
-    def __init__(self, config_filename=None):
+    def __init__(self, config_filename=None, is_liquid=False):
         if config_filename is None:
-            config_filename = os.path.expanduser(DEFAULT_CONFIG_FILENAME)
+            config_filename = os.path.expanduser(DEFAULT_CONFIG_FILENAME[is_liquid])
 
         self.config = configparser.ConfigParser()
         try:

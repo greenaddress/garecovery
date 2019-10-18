@@ -43,6 +43,8 @@ def set_witness(tx, i, witness):
 
 def get_output_address(tx, i, versions, family):
     script = wally.tx_get_output_script(tx, i)
+    if len(script) == 0: # liquid only
+        return 'fee'
     script_type = wally.scriptpubkey_get_type(script)
     if script_type == wally.WALLY_SCRIPT_TYPE_P2PKH:
         return wally.base58check_from_bytes(bytearray([versions[0]]) + script[3:23])

@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+import sys
+from garecovery import recoverycli
+
+sys.exit(recoverycli.main(sys.argv, is_liquid=True))
