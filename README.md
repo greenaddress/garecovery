@@ -141,6 +141,41 @@ If any recoverable coins were found the tool will display a summary of
 them on the console and write the details to the output csv file ready for
 broadcasting using the same steps as detailed above for 2of2 subaccounts.
 
+## Liquid Recovery
+
+In the case of Liquid subaccounts the outputs are locked by CSV
+(OP_CHECK_SEQUENCE_VERIFY) scripts. Which means that coins can be spent either
+by signing with your default key and the Green/GreenAddress key under
+normal circumstances, or by signing with your default key only after a certain
+amount of blocks.
+
+Unspent coins in Liquid subaccounts are only discoverable by scanning the
+blockchain to look for them. The recovery tool connects to your Liquid/Elements
+core full node in order to perform this scanning for you when recovering.
+
+You will need:
+
+- A Liquid/Elements core full node configured for local RPC access
+- The recovery tool
+- Your Green/GreenAddress Liquid mnemonic
+
+Instructions to run a Liquid node can be found
+[here](https://docs.blockstream.com/liquid/quickstart.html). Ensure your node
+is running, fully synced and you are able to connect to the RPC interface. You
+can verify this using a command like:
+
+   $ /path/to/elements-core/bin/elements-cli getblockchaininfo
+
+Run the recovery tool in CSV mode:
+
+    $ garecovery-liquid-cli csv --network=liquid
+
+The tool will prompt you for your mnemonic.
+
+Unlike 2of3, wallet functionality must be available on your node. Indeed the
+tool will create transactions sending the recovered funds to addresses obtained
+from the node.
+
 # Troubleshooting
 
 If you find any bugs, or have suggestions or patches, please raise them on
