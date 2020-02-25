@@ -7,4 +7,4 @@ https://github.com/ElementsProject/libwally-core/releases/download/release_0.6.4
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.6.4/wallycore-0.6.4-cp27-cp27m-macosx_10_13_intel.whl; sys_platform == 'darwin' and python_version == '2.7' --hash=sha256:a912153d772d2c36b46a409b162d50b61c7b541eae56b4c2fa5f33383856fe50
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.6.4/wallycore-0.6.4-cp37-cp37m-macosx_10_13_x86_64.whl; sys_platform == 'darwin' and python_version == '3.7' --hash=sha256:d75e84170abab87393b30e4115559cb65622cdf6bb087250d0cf98f0d44a7ab6
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.6.4/wallycore-0.6.4-cp36-cp36m-win_amd64.whl; sys_platform == 'win32' and python_version == '3.6' --hash=sha256:3d8ab2a61914f0af584e76d3cdfd7cd79c2d4ac0df9996d2c87e6d685739b3a2
-https://github.com/ElementsProject/libwally-core/archive/release_0.6.4.tar.gz; --hash=sha256:ebaa0fec1a64c0a764d960f345f725993f5f2ce8078eb50788767f091ce10963
+https://github.com/ElementsProject/libwally-core/archive/release_0.6.4.tar.gz --hash=sha256:ebaa0fec1a64c0a764d960f345f725993f5f2ce8078eb50788767f091ce10963
