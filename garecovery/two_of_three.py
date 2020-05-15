@@ -137,42 +137,6 @@ class UTXO:
         self.dest_address = dest_address
         self.witness = self.keyset.witnesses[witness_type]
 
-    def get_default_feerate(self):
-        """Get a value for default feerate.
-
-        On testnet only it is possible to pass --default-feerate as an option. On mainnet this is
-        not supported as it is too error prone.
-        """
-        if clargs.args.default_feerate is None:
-            msg = 'Unable to get fee rate from core, you must pass --default-feerate'
-            raise exceptions.NoFeeRate(msg)
-
-        fee_satoshi_byte = decimal.Decimal(clargs.args.default_feerate)
-        return fee_satoshi_byte
-
-    def get_feerate(self):
-        """Return the required fee rate in satoshis per byte"""
-        logging.debug("Connecting to bitcoinrpc to get feerate")
-        core = bitcoincore.Connection(clargs.args)
-
-        blocks = clargs.args.fee_estimate_blocks
-
-        estimate = core.estimatesmartfee(blocks)
-        if 'errors' in estimate:
-            fee_satoshi_byte = self.get_default_feerate()
-        else:
-            fee_btc_kb = estimate['feerate']
-            fee_satoshi_kb = fee_btc_kb * gaconstants.SATOSHI_PER_BTC
-            fee_satoshi_byte = round(fee_satoshi_kb / 1000)
-
-            logging.debug('feerate = {} BTC/kb'.format(fee_btc_kb))
-            logging.debug('feerate = {} satoshis/kb'.format(fee_satoshi_kb))
-
-        logging.info('Fee estimate for confirmation in {} blocks is '
-                     '{} satoshis/byte'.format(blocks, fee_satoshi_byte))
-
-        return fee_satoshi_byte
-
     def get_raw_unsigned(self, fee_satoshi):
         """Return raw transaction ready for signing
 
@@ -205,7 +169,7 @@ class UTXO:
         """Given a raw transaction return the fee"""
         virtual_tx_size = wally.tx_get_vsize(tx)
         logging.debug("virtual transaction size = {}".format(virtual_tx_size))
-        fee_satoshi_byte = self.get_feerate()
+        fee_satoshi_byte = util.get_feerate()
         fee_satoshi = fee_satoshi_byte * virtual_tx_size
         logging.debug('Calculating fee over {} (virtual) byte tx @{} satoshi per '
                       'byte = {} satoshis'.format(virtual_tx_size, fee_satoshi_byte, fee_satoshi))
