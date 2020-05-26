@@ -35,11 +35,20 @@ should be followed.
 The recovery tool supports recovering from both types of subaccounts.
 
 ## 2of2 Recovery
-Coins held in a 2of2 account need to be signed by both you and GreenAddress.
-Provided you have nLocktime emails enabled in your settings, the service
-automatically generates special "nLockTime" transactions, pre-signed by
-GreenAddress but not spendable until some time in the future (the nLockTime).
+Coins held in 2of2 accounts need to be signed by both you and Blockstream
+Green (also known with the previous name Greenaddress).
+At the moment, provided you have nLocktime emails enabled in your settings, the
+service automatically generates special "nLockTime" transactions, pre-signed by
+Blockstream Green but not spendable until some time in the future (the
+nLockTime).
+To recover these coins, refer to the 'nLocktime' section.
+In the future, thanks to a new type of script (CSV) the coins will be spendable
+by your keys only after a chosen amount of blocks has passed.
+To recover these coins, refer to the 'CSV (Check Sequence Verify)' section.
+Note that, in some cases, it may be needed to follow both procedures to recover
+all coins.
 
+### nLocktime
 To recover coins from a 2of2 account you simply wait until each nLockTime
 transaction becomes spendable (90 days by default), then countersign using
 the recovery tool and broadcast. The coins are sent to a key derived
@@ -87,6 +96,33 @@ using your full node via RPC or online tools such as:
 
 https://blockexplorer.com/tx/send  
 https://www.smartbit.com.au/txs/pushtx
+
+### CSV (Check Sequence Verify)
+Unspent coins locked by CSV scripts (OP_CHECK_SEQUENCE_VERIFY, not to be
+confused with the file extension `.csv`) in 2of2 subaccounts are discoverable
+by scanning the blockchain to look for them. The recovery tool connects to your
+Bitcoin Core full node in order to perform this scanning for you when
+recovering.
+
+You will need:
+
+- A Bitcoin Core full node configured for local RPC access; the node wallet
+  functionality must not be disabled, indeed the coins will be sent to
+  addresses owned obtained from the node.
+- The recovery tool
+- Your Blockstream Green/GreenAddress mnemonic
+
+To run the recovery tool in 2of2-csv mode:
+```
+$ garecovery-cli 2of2-csv -o garecovery.csv
+```
+
+Enter your mnemonic when prompted. The recovery tool will print a summary of the
+recovery transactions and also write them to a file `garecovery.csv`.
+
+If any recoverable coins were found the tool will display a summary of
+them on the console and write the details to the output csv file ready for
+broadcasting using the same steps as detailed above for 2of2 nLocktime.
 
 ## 2of3 Recovery
 *Note for 0.17 users:* it is now possible to specify `--ignore-mempool`,
