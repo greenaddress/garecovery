@@ -12,6 +12,7 @@ from .mnemonic import (check_mnemonic_or_hex_seed, _decrypt_mnemonic, seed_from_
                        wallet_from_mnemonic)
 
 from .two_of_two import TwoOfTwo
+from .two_of_two_csv import TwoOfTwoCSV
 from .two_of_three import TwoOfThree
 from .liquid_recovery import LiquidRecovery
 
@@ -64,8 +65,10 @@ def get_recovery(options, mnemonic, seed):
             backup_wallet = wallet_from_mnemonic(recovery_mnemonic)
 
         return TwoOfThree(mnemonic, wallet, backup_wallet, options.custom_xprv)
-    else:
+    elif options.recovery_mode == '2of2':
         return TwoOfTwo(mnemonic, seed, options.nlocktime_file)
+    else:
+        return TwoOfTwoCSV(mnemonic, seed)
 
 
 def main(argv=None, is_liquid=False):

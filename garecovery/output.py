@@ -18,10 +18,13 @@ class Green2of2CSVOutput(GreenOutput):
         super(Green2of2CSVOutput, self).__init__(key, service_pubkey, network)
         self.csv_blocks = csv_blocks
 
+    def scriptpubkey_csv_2of2_then_1_fn(self, keys, csv_blocks, flags=0):
+        return wally.scriptpubkey_csv_2of2_then_1_from_bytes_opt(keys, csv_blocks, flags)
+
     @property
     def witness_script(self):
         keys = self.service_pubkey + self.key.pub
-        return wally.scriptpubkey_csv_2of2_then_1_from_bytes(keys, self.csv_blocks, 0)
+        return self.scriptpubkey_csv_2of2_then_1_fn(keys, self.csv_blocks)
 
     @property
     def witness_program(self):
@@ -50,12 +53,15 @@ class Green2of2CSVOutput(GreenOutput):
     def script_sig(self):
         return wally.script_push_from_bytes(self.redeem_script, 0)
 
+    def get_signed_witness_stack(self, h, sighash):
+        return [
+            None,
+            self.sign(h) + bytes([sighash]),
+            self.witness_script]
+
     def get_signed_witness(self, h, sighash=wally.WALLY_SIGHASH_ALL):
         """Produce witness stack assuming CSV time is expired"""
-        witness = wally.tx_witness_stack_init(1)
-        wally.tx_witness_stack_add(witness, self.sign(h) + bytes([sighash]))
-        wally.tx_witness_stack_add(witness, self.witness_script)
-        return witness
+        return wally.tx_witness_stack_create(self.get_signed_witness_stack(h, sighash))
 
 
 class Green2of2CSVElementsOutput(Green2of2CSVOutput):
@@ -64,6 +70,14 @@ class Green2of2CSVElementsOutput(Green2of2CSVOutput):
     # FIXME: consider adding a seed/master_blinding_key param
     def __init__(self, key, service_pubkey, csv_blocks, network='liquid'):
         super(Green2of2CSVElementsOutput, self).__init__(key, service_pubkey, csv_blocks, network)
+
+    def scriptpubkey_csv_2of2_then_1_fn(self, keys, csv_blocks, flags=0):
+        return wally.scriptpubkey_csv_2of2_then_1_from_bytes(keys, csv_blocks, flags)
+
+    def get_signed_witness_stack(self, h, sighash):
+        return [
+            self.sign(h) + bytes([sighash]),
+            self.witness_script]
 
     def get_private_blinding_key(self, seed):
         master_blinding_key = wally.asset_blinding_key_from_seed(seed)

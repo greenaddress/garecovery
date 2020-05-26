@@ -251,6 +251,10 @@ class AuthServiceProxy:
                     self.txout_by_address[addr] += [amount, asset, a_bl, v_bl, conf]
                     # for simplicity liquid mockup tx have one output
                     assert wally.tx_get_num_outputs(tx) == 1
+                else:
+                    conf = tx_data[1] if len(tx_data) > 1 else 0
+                    self.txout_by_address[addr] += [conf]
+
         self.imported = {}
 
         # This is something of a workaround because all the existing tests are based on generating
@@ -281,13 +285,16 @@ class AuthServiceProxy:
         imported = self.imported.get(address, None)
         if imported is None:
             return None
-        tx, i = imported[:2]
+        tx, i, conf = imported[:3]
         scriptpubkey = wally.tx_get_output_script(tx, i)
+        satoshi = wally.tx_get_output_satoshi(tx, i)
         ret = {
             "txid": txutil.get_txhash_hex(tx),
             "vout": i,
             "address": address,
-            "scriptPubKey": wally.hex_from_bytes(scriptpubkey)
+            "scriptPubKey": wally.hex_from_bytes(scriptpubkey),
+            "amount": round(satoshi * 10**-8, 8),
+            "confirmations": int(conf),
         }
 
         if self.is_liquid:

@@ -21,7 +21,7 @@ DEFAULT_OFILE = 'garecovery.csv'
 
 
 SUBACCOUNT_TYPES = {
-    False: ['2of2', '2of3'],
+    False: ['2of2', '2of3', '2of2-csv'],
     True: ['csv'],
 }
 
@@ -170,7 +170,7 @@ def get_args(argv, is_liquid=False):
 
         kwargs_option_search_subaccounts['help'] += \
             '; if --ga-xpub is not known it is possible to search subaccounts using this option'
-        two_of_three_xpub_exclusive.add_argument(
+        action_subaccounts = two_of_three_xpub_exclusive.add_argument(
             '--search-subaccounts', **kwargs_option_search_subaccounts)
 
         two_of_three_backup_key_exclusive = two_of_three.add_mutually_exclusive_group(
@@ -185,27 +185,39 @@ def get_args(argv, is_liquid=False):
                  'Only required if an xpub was specified when creating the subaccount')
 
         advanced_2of3 = parser.add_argument_group('2of3 advanced options')
-        advanced_2of3.add_argument('--key-search-depth', **kwargs_option_key_search_depth)
-        advanced_2of3.add_argument('--scan-from', **kwargs_option_scan_from)
-        advanced_2of3.add_argument(
+        action_key = advanced_2of3.add_argument(
+            '--key-search-depth', **kwargs_option_key_search_depth)
+        action_scan = advanced_2of3.add_argument('--scan-from', **kwargs_option_scan_from)
+        action_fee_blocks = advanced_2of3.add_argument(
             '--fee-estimate-blocks',
             dest='fee_estimate_blocks',
             type=int,
             default=DEFAULT_FEE_ESTIMATE_BLOCKS,
             help='Use a transaction fee likely to result in a transaction being '
                  'confirmed in this many blocks minimum')
-        advanced_2of3.add_argument(
+        action_default_feerate = advanced_2of3.add_argument(
             '--default-feerate',
             dest='default_feerate',
             type=int,
             help='Fee rate (satoshis per byte) to use if unable to automatically get one')
 
-        advanced_2of3.add_argument(
+        action_scantxoutset = advanced_2of3.add_argument(
             '--ignore-mempool',
             dest='ignore_mempool',
             action='store_true',
             help='Ignore the mempool when scanning the UTXO set for 2of3 transactions. '
                  'This enables the use of scantxoutset which makes recovery much faster.')
+
+        two_of_two_csv = parser.add_argument_group('2of2 csv options')
+
+        two_of_two_csv._group_actions = [
+            action_subaccounts,
+            action_key,
+            action_scan,
+            action_fee_blocks,
+            action_default_feerate,
+            action_scantxoutset,
+        ]
 
     argcomplete.autocomplete(parser)
     result = parser.parse_args(argv[1:])
@@ -231,10 +243,14 @@ def get_args(argv, is_liquid=False):
         for arg in ['--destination-address', '--ga-xpub', '--search-subaccounts',
                     '--recovery-mnemonic-file', '--custom-xprv', '--default-feerate']:
             arg_disallowed(arg)
-    else:
+    elif result.recovery_mode == '2of3':
         arg_disallowed('--nlocktime-file')
         arg_required('--destination-address')
         if optval('search_subaccounts') is None:
             arg_required('--ga-xpub', '--ga-xpub or --search-subaccounts')
+    else:
+        for arg in ['--destination-address', '--ga-xpub', '--recovery-mnemonic-file',
+                    '--custom-xprv', '--nlocktime-file']:
+            arg_disallowed(arg)
 
     return result

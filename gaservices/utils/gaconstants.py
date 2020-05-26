@@ -7,6 +7,8 @@ PY3 = sys.version_info.major > 2
 
 SATOSHI_PER_BTC = decimal.Decimal(1e8)
 
+DUST_SATOSHI = 546
+
 MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 
 # BIP32 hardened derivation flag
@@ -50,6 +52,9 @@ CSV_BUCKETS = {
     'testnet': [144, 4320, 51840],
     'mainnet': [25920, 51840, 65535],
 }
+
+EMPTY_TX_SIZE = 106  # 0 inputs 1 p2wsh (longest) output
+INPUT_SIZE = 159
 
 # TODO: correctly estimate transaction vsize
 # The following values overestimate the impact of adding an input or output to the transaction vsize, in order to
