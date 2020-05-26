@@ -21,7 +21,15 @@ from gaservices.utils import txutil, gaconstants
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
 
 
-mock_addresses = [
+mock_addresses_bitcoin = [
+  {
+    'address': '2MsFDzHRUAMpjHxKyoEHU3aMCMsVtMqs1PV',
+  },
+  {
+    'address': '2MsFDzHRUAMpjHxKyoEHU3aMCMsVtXMsfu8',
+  },
+]
+mock_addresses_liquid = [
   {
     'address': 'AzpjuSThJLcyJFrXZDXstHU8uvq8EDDPBTzQvAQuNVbZaisSjYX1HMEMjaoLz2AphkJ2wfmFwRGhyako',
     'unconfidential_address': 'XKMc3Zqa2eqzDCJ2u9y1vUBnC7o1p3WnKh',
@@ -318,6 +326,7 @@ class AuthServiceProxy:
         return {'bitcoin': 'b2e15d0d7a0c94e4e2ce0fe6e8691b9e451377f6e46e8045a86f7c4b5d4f0f23'}
 
     def getnewaddress(self):
+        mock_addresses = mock_addresses_liquid if self.is_liquid else mock_addresses_bitcoin
         self.given_addresses += 1
         return mock_addresses[self.given_addresses % len(mock_addresses)]['address']
 
@@ -343,7 +352,7 @@ class AuthServiceProxy:
             if address == 'fee':
                 fee_value = value
             else:
-                mock_address = [e for e in mock_addresses if e['address'] == address][0]
+                mock_address = [e for e in mock_addresses_liquid if e['address'] == address][0]
                 scriptpubkey = wally.hex_to_bytes(mock_address['scriptpubkey'])
                 blindingpubkey = wally.hex_to_bytes(mock_address['public_blinding_key'])
                 asset = b'\x01' + wally.hex_to_bytes(map_asset[address])[::-1]

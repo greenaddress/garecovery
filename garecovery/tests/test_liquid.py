@@ -5,7 +5,7 @@ import mock
 import garecovery.liquid_recovery
 from garecovery.clargs import DEFAULT_SUBACCOUNT_SEARCH_DEPTH
 from garecovery.tests.util import AuthServiceProxy, datafile, get_output, parse_summary, \
-    raise_IOError, mock_addresses
+    raise_IOError, mock_addresses_liquid
 
 
 garecovery.bitcoin_config.open = raise_IOError
@@ -61,7 +61,7 @@ def test_csv(mock_bitcoincore):
     output = get_output(['--show-summary', ] + args, is_liquid=True)
     summary = parse_summary(output)
     assert len(summary) == 2
-    assert summary[0]['destination address'] == mock_addresses[0]['unconfidential_address']
+    assert summary[0]['destination address'] == mock_addresses_liquid[0]['unconfidential_address']
 
 
 @mock.patch('garecovery.liquid_recovery.bitcoincore.AuthServiceProxy')
@@ -113,8 +113,8 @@ def test_asset_csv(mock_bitcoincore):
     output = get_output(['--show-summary', ] + args, is_liquid=True)
     summary = parse_summary(output)
     assert len(summary) == 3
-    assert summary[0]['destination address'] == mock_addresses[1]['unconfidential_address']
-    assert summary[1]['destination address'] == mock_addresses[0]['unconfidential_address']
+    assert summary[0]['destination address'] == mock_addresses_liquid[1]['unconfidential_address']
+    assert summary[1]['destination address'] == mock_addresses_liquid[0]['unconfidential_address']
 
 
 @mock.patch('garecovery.liquid_recovery.bitcoincore.AuthServiceProxy')
@@ -168,7 +168,7 @@ def test_split_unblinded_csv(mock_bitcoincore):
     output = get_output(['--show-summary', ] + args, is_liquid=True)
     summary = parse_summary(output)
     assert len(summary) == 2
-    assert summary[0]['destination address'] == mock_addresses[0]['unconfidential_address']
+    assert summary[0]['destination address'] == mock_addresses_liquid[0]['unconfidential_address']
 
     # Split unblinded transaction
     args += ['--split-unblinded-inputs']
@@ -180,5 +180,5 @@ def test_split_unblinded_csv(mock_bitcoincore):
     output = get_output(['--show-summary', ] + args, is_liquid=True)
     summary = parse_summary(output)
     assert len(summary) == 4
-    assert summary[0]['destination address'] == mock_addresses[1]['unconfidential_address']
-    assert summary[2]['destination address'] == mock_addresses[0]['unconfidential_address']
+    assert summary[0]['destination address'] == mock_addresses_liquid[1]['unconfidential_address']
+    assert summary[2]['destination address'] == mock_addresses_liquid[0]['unconfidential_address']
