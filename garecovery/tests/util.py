@@ -234,7 +234,7 @@ class AuthServiceProxy:
             tx_data = line.strip().split()
             tx_hex = tx_data[0]
             tx = self.tx_from_hex(tx_hex)
-            self.tx_by_id[txutil.get_txhash_bin(tx)] = tx
+            self.tx_by_id[txutil.get_txhash_hex(tx)] = tx
             for i in range(wally.tx_get_num_outputs(tx)):
                 addr = txutil.get_output_address(tx, i, versions, family)
                 self.txout_by_address[addr] = [tx, i]
@@ -276,7 +276,7 @@ class AuthServiceProxy:
         tx, i = imported[:2]
         scriptpubkey = wally.tx_get_output_script(tx, i)
         ret = {
-            "txid": txutil.get_txhash_bin(tx),
+            "txid": txutil.get_txhash_hex(tx),
             "vout": i,
             "address": address,
             "scriptPubKey": wally.hex_from_bytes(scriptpubkey)
