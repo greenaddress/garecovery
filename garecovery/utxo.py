@@ -1,6 +1,55 @@
 import wallycore as wally
 
 
+class UTXO(object):
+    """UTXO"""
+
+    def __init__(self, unspent):
+        """Create UTXO from scanutxoset output"""
+        self.txid = wally.hex_to_bytes(unspent.get('txid'))[::-1]
+        self.vout = unspent.get('vout')
+        self.script_pubkey = wally.hex_to_bytes(unspent.get('scriptPubKey'))
+        self.height = unspent.get('height')
+        self.satoshi = round(unspent['amount'] * 10 ** 8)
+
+
+class SpendableUTXO(UTXO):
+    """Utxo able to spend itself"""
+
+    def __init__(self, unspent, output):
+        super().__init__(unspent)
+        if output.script_pubkey != self.script_pubkey:
+            raise ValueError('scriptpubkey must match: {}, {}'.format(
+                wally.hex_from_bytes(output.script_pubkey),
+                wally.hex_from_bytes(self.script_pubkey)))
+        self.output = output
+
+    def is_expired(self, blockcount):
+        if not hasattr(self.output, 'csv_blocks'):
+            return True
+        return (blockcount - self.height) >= self.output.csv_blocks
+
+    def set_csv_sequence(self, tx, index):
+        """Set the sequence number with csv_blocks"""
+        wally.tx_set_input_sequence(tx, index, self.output.csv_blocks)
+
+    def _get_signature_hash(self, tx, index):
+        return wally.tx_get_btc_signature_hash(
+            tx,
+            index,
+            self.output.witness_script,
+            self.satoshi,
+            wally.WALLY_SIGHASH_ALL,
+            wally.WALLY_TX_FLAG_USE_WITNESS)
+
+    def sign(self, tx, index):
+        """Sign the index-th input of tx, fill its witness and scriptSig assuming CSV time is
+        expired"""
+        txhash = self._get_signature_hash(tx, index)
+        wally.tx_set_input_witness(tx, index, self.output.get_signed_witness(txhash))
+        wally.tx_set_input_script(tx, index, self.output.script_sig)
+
+
 class ElementsUTXO(object):
     """Elements UTXO"""
 
@@ -43,7 +92,7 @@ class ElementsUTXO(object):
         return 1 == self.asset_commitment[0] == self.value_commitment[0]
 
 
-class SpendableElementsUTXO(ElementsUTXO):
+class SpendableElementsUTXO(ElementsUTXO, SpendableUTXO):
     """Elements unblinded UTXO able to spend itself"""
 
     def __init__(self, unspent, output, seed):
@@ -53,26 +102,11 @@ class SpendableElementsUTXO(ElementsUTXO):
         self.output = output
         self.unblind(output.get_private_blinding_key(seed))
 
-    def is_expired(self, blockcount):
-        if not hasattr(self.output, 'csv_blocks'):
-            return True
-        return (blockcount - self.height) >= self.output.csv_blocks
-
-    def set_csv_sequence(self, tx, index):
-        """Set the sequence number with csv_blocks"""
-        wally.tx_set_input_sequence(tx, index, self.output.csv_blocks)
-
-    def sign(self, tx, index):
-        """Sign the index-th input of tx, fill its witness and scriptSig assuming CSV time is
-        expired"""
-
-        txhash = wally.tx_get_elements_signature_hash(
+    def _get_signature_hash(self, tx, index):
+        return wally.tx_get_elements_signature_hash(
             tx,
             index,
             self.output.witness_script,
             self.value_commitment,
             wally.WALLY_SIGHASH_ALL,
             wally.WALLY_TX_FLAG_USE_WITNESS)
-
-        wally.tx_set_input_witness(tx, index, self.output.get_signed_witness(txhash))
-        wally.tx_set_input_script(tx, index, self.output.script_sig)
