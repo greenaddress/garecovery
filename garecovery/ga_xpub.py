@@ -1,6 +1,6 @@
 import struct
 
-from gaservices.utils import gaconstants
+from gaservices.utils import gaconstants, b2h, h2b
 import wallycore as wally
 
 from . import exceptions
@@ -23,8 +23,8 @@ def get_ga_root_key(network):
     """Return the GreenAddress root public key for the given network, or as set by options"""
     key_data = gaconstants.get_ga_key_data(network)
     return get_bip32_pubkey(
-        wally.hex_to_bytes(key_data['chaincode']),
-        wally.hex_to_bytes(key_data['pubkey']),
+        h2b(key_data['chaincode']),
+        h2b(key_data['pubkey']),
         network
     )
 
@@ -88,7 +88,7 @@ def gait_paths_from_seed(seed, latest_only=False):
     path_input = chain_code + pub_key
     if latest_only:
         return get_gait_path(path_input)
-    path_input_hex = bytearray(wally.hex_from_bytes(chain_code + pub_key), 'ascii')
+    path_input_hex = bytearray(b2h(chain_code + pub_key), 'ascii')
     # Some clients use the master public key instead of one hardened derived from it
     chain_code_m = wally.bip32_key_get_chain_code(root_key)
     pub_key_m = wally.bip32_key_get_pub_key(root_key)

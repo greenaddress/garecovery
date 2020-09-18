@@ -15,7 +15,7 @@ except ImportError:
 
 from garecovery.recoverycli import main
 from garecovery.clargs import DEFAULT_OFILE
-from gaservices.utils import txutil, gaconstants
+from gaservices.utils import txutil, gaconstants, b2h, h2b, h2b_rev
 
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -271,7 +271,7 @@ class AuthServiceProxy:
                 assert request['watchonly'] is True
                 address = request['scriptPubKey']['address']
             else:
-                scriptpubkey = wally.hex_to_bytes(request['scriptPubKey'])
+                scriptpubkey = h2b(request['scriptPubKey'])
                 assert wally.scriptpubkey_get_type(scriptpubkey) == wally.WALLY_SCRIPT_TYPE_P2SH
                 address = wally.base58check_from_bytes(
                     bytearray([gaconstants.ADDR_VERSIONS_LIQUID_REGTEST[1]]) + scriptpubkey[2:22])
@@ -292,7 +292,7 @@ class AuthServiceProxy:
             "txid": txutil.get_txhash_hex(tx),
             "vout": i,
             "address": address,
-            "scriptPubKey": wally.hex_from_bytes(scriptpubkey),
+            "scriptPubKey": b2h(scriptpubkey),
             "amount": round(satoshi * 10**-8, 8),
             "confirmations": int(conf),
         }
@@ -301,11 +301,11 @@ class AuthServiceProxy:
             # TODO: also mockup the unblinded case
             amount, asset, a_bl, v_bl, conf = imported[2:]
             generator = wally.asset_generator_from_bytes(
-                wally.hex_to_bytes(asset)[::-1],  wally.hex_to_bytes(a_bl)[::-1])
+                h2b_rev(asset),  h2b_rev(a_bl))
             value_commitment = wally.asset_value_commitment(
-                round(float(amount) * 10 ** 8), wally.hex_to_bytes(v_bl)[::-1], generator)
-            a_com = wally.hex_from_bytes(generator)
-            v_com = wally.hex_from_bytes(value_commitment)
+                round(float(amount) * 10 ** 8), h2b_rev(v_bl), generator)
+            a_com = b2h(generator)
+            v_com = b2h(value_commitment)
             ret.update({
                 "txid": txutil.get_txhash_hex(tx),
                 "amount": float(amount),
@@ -349,7 +349,7 @@ class AuthServiceProxy:
             sequence += 1
 
         for _input in inputs:
-            txid = wally.hex_to_bytes(_input['txid'])[::-1]
+            txid = h2b_rev(_input['txid'])
             wally.tx_add_elements_raw_input(tx, txid, _input['vout'], sequence, None,
                                             None, None, None, None, None, None, None, None, 0)
 
@@ -360,13 +360,13 @@ class AuthServiceProxy:
                 fee_value = value
             else:
                 mock_address = [e for e in mock_addresses_liquid if e['address'] == address][0]
-                scriptpubkey = wally.hex_to_bytes(mock_address['scriptpubkey'])
-                blindingpubkey = wally.hex_to_bytes(mock_address['public_blinding_key'])
-                asset = b'\x01' + wally.hex_to_bytes(map_asset[address])[::-1]
+                scriptpubkey = h2b(mock_address['scriptpubkey'])
+                blindingpubkey = h2b(mock_address['public_blinding_key'])
+                asset = b'\x01' + h2b_rev(map_asset[address])
                 wally.tx_add_elements_raw_output(
                     tx, scriptpubkey, asset, value, blindingpubkey, None, None, 0)
         # force fee to be the last output, to make things simpler
-        lbtc = b'\x01' + wally.hex_to_bytes(self.lbtc_hex)[::-1]
+        lbtc = b'\x01' + h2b_rev(self.lbtc_hex)
         wally.tx_add_elements_raw_output(tx, None, lbtc, fee_value, None, None, None, 0)
 
         return self.tx_to_hex(tx)
@@ -376,9 +376,9 @@ class AuthServiceProxy:
         tx = self.tx_from_hex(tx_hex)
 
         input_values = [round(i * 10 ** 8) for i in input_values]
-        input_assets = [wally.hex_to_bytes(h)[::-1] for h in input_assets_hex]
-        input_abfs = [wally.hex_to_bytes(h)[::-1] for h in input_abfs_hex]
-        input_vbfs = [wally.hex_to_bytes(h)[::-1] for h in input_vbfs_hex]
+        input_assets = [h2b_rev(h) for h in input_assets_hex]
+        input_abfs = [h2b_rev(h) for h in input_abfs_hex]
+        input_vbfs = [h2b_rev(h) for h in input_vbfs_hex]
         input_ags = [
             wally.asset_generator_from_bytes(a, bf) for a, bf in zip(input_assets, input_abfs)]
 

@@ -1,5 +1,5 @@
 """ Transaction utility functions """
-from . import gaconstants
+from . import gaconstants, b2h_rev
 import wallycore as wally
 
 if gaconstants.PY3:
@@ -21,7 +21,7 @@ def get_txhash_bin(tx):
 
 
 def get_txhash_hex(tx):
-    return wally.hex_from_bytes(get_txhash_bin(tx)[::-1])
+    return b2h_rev(get_txhash_bin(tx))
 
 
 def new(nlocktime=0, inputs=8, outputs=8, version=wally.WALLY_TX_VERSION_2):

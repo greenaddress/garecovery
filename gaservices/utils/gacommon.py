@@ -3,7 +3,7 @@ from io import BytesIO
 
 import base64
 
-from . import gaconstants, txutil
+from . import gaconstants, txutil, h2b
 import wallycore as wally
 
 
@@ -78,7 +78,7 @@ def _to_der(sig):
 def sign(txdata, signatories):
     tx = txutil.from_hex(txdata['tx'])
     for i in range(wally.tx_get_num_inputs(tx)):
-        script = wally.hex_to_bytes(txdata['prevout_scripts'][i])
+        script = h2b(txdata['prevout_scripts'][i])
         script_type = txdata['prevout_script_types'][i]
         flags, value, sighash = 0, 0, wally.WALLY_SIGHASH_ALL
 
@@ -102,7 +102,7 @@ def sign(txdata, signatories):
 
 
 def countersign(txdata, private_key):
-    GreenAddress = PassiveSignatory(wally.hex_to_bytes(txdata['prevout_signatures'][0]))
+    GreenAddress = PassiveSignatory(h2b(txdata['prevout_signatures'][0]))
     user = ActiveSignatory(wally.bip32_key_get_priv_key(private_key))
     return sign(txdata, [GreenAddress, user])
 

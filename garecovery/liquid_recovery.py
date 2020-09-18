@@ -8,6 +8,7 @@ from garecovery.exceptions import BitcoinCoreConnectionError, InsufficientFee, \
 from garecovery.util import get_current_blockcount
 from garecovery import clargs
 from garecovery import bitcoincore
+from gaservices.utils import b2h, b2h_rev, h2b
 from gaservices.utils.gaconstants import CSV_BUCKETS, LIQUID_EMPTY_TX_SIZE, LIQUID_OUTPUT_SIZE, \
     LIQUID_INPUT_SIZE
 
@@ -46,15 +47,15 @@ class LiquidRecovery(object):
             tx = wally.tx_from_hex(tx_hex, flags)
             u.update({
                 'address': u['desc'][5:-10],  # stripping from "addr(<address>)#<8-char checksum>"
-                'noncecommitment': wally.hex_from_bytes(wally.tx_get_output_nonce(tx, u['vout'])),
-                'rangeproof': wally.hex_from_bytes(wally.tx_get_output_rangeproof(tx, u['vout'])),
+                'noncecommitment': b2h(wally.tx_get_output_nonce(tx, u['vout'])),
+                'rangeproof': b2h(wally.tx_get_output_rangeproof(tx, u['vout'])),
             })
 
         # unblind and match keys with utxos
         utxos = [SpendableElementsUTXO(u, o, self.seed)
                  for u in result['unspents']
                  for o in outputs
-                 if wally.hex_to_bytes(u['scriptPubKey']) == o.script_pubkey]
+                 if h2b(u['scriptPubKey']) == o.script_pubkey]
 
         logging.info('found {} utxos'.format(len(utxos)))
         return utxos
@@ -105,10 +106,10 @@ class LiquidRecovery(object):
             if not u.is_expired(blockcount):
                 blocks_left = u.output.csv_blocks + u.height - blockcount
                 logging.info('Skipping utxo ({}:{}) not expired ({} blocks left)'.format(
-                    wally.hex_from_bytes(u.txid[::-1]), u.vout, blocks_left))
+                    b2h_rev(u.txid), u.vout, blocks_left))
                 continue
 
-            asset = wally.hex_from_bytes(u.asset[::-1])
+            asset = b2h_rev(u.asset)
             if asset not in balance:
                 balance.update({asset: u.value})
                 estimated_vsize += (LIQUID_INPUT_SIZE + LIQUID_OUTPUT_SIZE)
@@ -116,11 +117,11 @@ class LiquidRecovery(object):
                 balance.update({asset: balance[asset] + u.value})
                 estimated_vsize += LIQUID_INPUT_SIZE
 
-            inputs.append({'txid': wally.hex_from_bytes(u.txid[::-1]), 'vout': u.vout})
-            input_assets.append(wally.hex_from_bytes(u.asset[::-1]))
+            inputs.append({'txid': b2h_rev(u.txid), 'vout': u.vout})
+            input_assets.append(b2h_rev(u.asset))
             input_values.append(round(10**-8 * u.value, 8))
-            input_abfs.append(wally.hex_from_bytes(u.abf[::-1]))
-            input_vbfs.append(wally.hex_from_bytes(u.vbf[::-1]))
+            input_abfs.append(b2h_rev(u.abf))
+            input_vbfs.append(b2h_rev(u.vbf))
             used_utxos.append(u)
 
         if len(used_utxos) == 0:

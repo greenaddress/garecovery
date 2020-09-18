@@ -6,7 +6,7 @@ import os
 import shutil
 import time
 
-from gaservices.utils import gacommon, gaconstants, txutil
+from gaservices.utils import gacommon, gaconstants, txutil, b2h, h2b
 
 import wallycore as wally
 
@@ -24,9 +24,9 @@ def get_scriptpubkey_hex(redeem_script_hash_hex):
 
 def get_redeem_script(keys):
     """Return a 2of3 multisig redeem script as a hex string"""
-    keys = [wally.hex_from_bytes(key) for key in keys]
+    keys = [b2h(key) for key in keys]
     logging.debug("get_redeem_script public keys = {}".format(keys))
-    return wally.hex_to_bytes("5221{}21{}21{}53ae".format(*keys))
+    return h2b("5221{}21{}21{}53ae".format(*keys))
 
 
 def bip32_key_from_base58check(base58check):
@@ -45,10 +45,10 @@ class P2SH:
 
     def __init__(self, pubkeys, network):
         self.redeem_script = get_redeem_script(pubkeys)
-        self.redeem_script_hex = wally.hex_from_bytes(self.redeem_script)
+        self.redeem_script_hex = b2h(self.redeem_script)
 
         script_hash = wally.hash160(self.get_witness_script())
-        script_hash_hex = wally.hex_from_bytes(script_hash)
+        script_hash_hex = b2h(script_hash)
         self.scriptPubKey = get_scriptpubkey_hex(script_hash_hex)
 
         ver = {'testnet': b'\xc4', 'mainnet': b'\x05'}[network]
@@ -105,7 +105,7 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, network):
             # Derive the GreenAddress public key for this pointer value
             ga_key = gacommon.derive_hd_key(ga_xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
             self.ga_key = wally.bip32_key_get_pub_key(ga_key)
-            logging.debug("ga_key = {}".format(wally.hex_from_bytes(self.ga_key)))
+            logging.debug("ga_key = {}".format(b2h(self.ga_key)))
 
             # Derive the user private keys for this pointer value
             flags = wally.BIP32_FLAG_KEY_PRIVATE

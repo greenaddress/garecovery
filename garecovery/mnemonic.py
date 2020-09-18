@@ -1,7 +1,7 @@
 import wallycore as wally
 
 from . import exceptions
-
+from gaservices.utils import h2b
 
 wordlist_ = wally.bip39_get_wordlist('en')
 wordlist = [wally.bip39_get_word(wordlist_, i) for i in range(2048)]
@@ -18,7 +18,7 @@ def seed_from_mnemonic(mnemonic_or_hex_seed):
     """
     if mnemonic_or_hex_seed.endswith('X'):
         mnemonic = None
-        seed = wally.hex_to_bytes(mnemonic_or_hex_seed[:-1])
+        seed = h2b(mnemonic_or_hex_seed[:-1])
     else:
         mnemonic = mnemonic_or_hex_seed
         written, seed = wally.bip39_mnemonic_to_seed512(mnemonic_or_hex_seed, None)

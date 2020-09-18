@@ -11,6 +11,7 @@ from garecovery.key import Bip32Key
 from garecovery.subaccount import Green2of2Subaccount
 from garecovery.utxo import SpendableUTXO
 from garecovery.util import get_current_blockcount, get_feerate, scriptpubkey_from_address
+from gaservices.utils import b2h_rev, h2b, h2b_rev
 from gaservices.utils.gaconstants import CSV_BUCKETS, DUST_SATOSHI, EMPTY_TX_SIZE, INPUT_SIZE, \
     MAX_BIP125_RBF_SEQUENCE
 
@@ -66,7 +67,7 @@ class TwoOfTwoCSV(object):
         utxos = [SpendableUTXO(u, o)
                  for u in unspents
                  for o in outputs
-                 if wally.hex_to_bytes(u['scriptPubKey']) == o.script_pubkey]
+                 if h2b(u['scriptPubKey']) == o.script_pubkey]
 
         logging.info('found {} utxos'.format(len(utxos)))
         return utxos
@@ -118,12 +119,12 @@ class TwoOfTwoCSV(object):
             if not u.is_expired(blockcount):
                 blocks_left = u.output.csv_blocks + u.height - blockcount
                 logging.info('Skipping utxo ({}:{}) not expired ({} blocks left)'.format(
-                    wally.hex_from_bytes(u.txid[::-1]), u.vout, blocks_left))
+                    b2h_rev(u.txid), u.vout, blocks_left))
                 continue
 
             estimated_vsize += INPUT_SIZE
 
-            inputs.append({'txid': wally.hex_from_bytes(u.txid[::-1]), 'vout': u.vout})
+            inputs.append({'txid': b2h_rev(u.txid), 'vout': u.vout})
             used_utxos.append(u)
 
         if len(used_utxos) == 0:
@@ -150,7 +151,7 @@ class TwoOfTwoCSV(object):
             sequence += 1
 
         for _input in inputs:
-            txid = wally.hex_to_bytes(_input['txid'])[::-1]
+            txid = h2b_rev(_input['txid'])
             wally.tx_add_raw_input(tx, txid, _input['vout'], sequence, None, None, 0)
 
         wally.tx_add_raw_output(tx, satoshi_send, scriptpubkey, 0)

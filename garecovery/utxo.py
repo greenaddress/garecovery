@@ -1,14 +1,16 @@
 import wallycore as wally
 
+from gaservices.utils import b2h, h2b, h2b_rev
+
 
 class UTXO(object):
     """UTXO"""
 
     def __init__(self, unspent):
         """Create UTXO from scanutxoset output"""
-        self.txid = wally.hex_to_bytes(unspent.get('txid'))[::-1]
+        self.txid = h2b_rev(unspent.get('txid'))
         self.vout = unspent.get('vout')
-        self.script_pubkey = wally.hex_to_bytes(unspent.get('scriptPubKey'))
+        self.script_pubkey = h2b(unspent.get('scriptPubKey'))
         self.height = unspent.get('height')
         self.satoshi = round(unspent['amount'] * 10 ** 8)
 
@@ -20,8 +22,8 @@ class SpendableUTXO(UTXO):
         super().__init__(unspent)
         if output.script_pubkey != self.script_pubkey:
             raise ValueError('scriptpubkey must match: {}, {}'.format(
-                wally.hex_from_bytes(output.script_pubkey),
-                wally.hex_from_bytes(self.script_pubkey)))
+                b2h(output.script_pubkey),
+                b2h(self.script_pubkey)))
         self.output = output
 
     def is_expired(self, blockcount):
@@ -55,31 +57,31 @@ class ElementsUTXO(object):
 
     def __init__(self, unspent):
         """Create ElementsUTXO from scanutxoset (processed) output"""
-        self.txid = wally.hex_to_bytes(unspent.get('txid'))[::-1]
+        self.txid = h2b_rev(unspent.get('txid'))
         self.vout = unspent.get('vout')
-        self.script_pubkey = wally.hex_to_bytes(unspent.get('scriptPubKey'))
+        self.script_pubkey = h2b(unspent.get('scriptPubKey'))
         self.address = unspent.get('address')
         self.height = unspent.get('height')
 
         # blinded data
         is_unblinded = 'asset' in unspent and 'amount' in unspent
-        self.asset = wally.hex_to_bytes(unspent['asset'])[::-1] if is_unblinded else None
+        self.asset = h2b_rev(unspent['asset']) if is_unblinded else None
         self.value = round(unspent['amount'] * 10**8) if is_unblinded else None
         self.abf = b'\x00' * 32 if self.asset else None
         self.vbf = b'\x00' * 32 if self.value else None
 
         self.asset_commitment = \
             b'\x01' + self.asset if is_unblinded else \
-            wally.hex_to_bytes(unspent.get('assetcommitment'))
+            h2b(unspent.get('assetcommitment'))
         self.value_commitment = \
             wally.tx_confidential_value_from_satoshi(self.value) if is_unblinded else \
-            wally.hex_to_bytes(unspent.get('amountcommitment'))
+            h2b(unspent.get('amountcommitment'))
         self.nonce_commitment = \
             b'' if is_unblinded else \
-            wally.hex_to_bytes(unspent.get('noncecommitment'))
+            h2b(unspent.get('noncecommitment'))
         self.rangeproof = \
             b'' if is_unblinded else \
-            wally.hex_to_bytes(unspent.get('rangeproof'))
+            h2b(unspent.get('rangeproof'))
 
     def unblind(self, private_blinding_key):
         if self.is_unblinded():

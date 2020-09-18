@@ -2,7 +2,7 @@ import logging
 import json
 import sys
 
-from gaservices.utils import gacommon, gaconstants, txutil
+from gaservices.utils import gacommon, gaconstants, txutil, b2h
 import wallycore as wally
 
 from . import clargs
@@ -52,8 +52,8 @@ class TwoOfTwo:
                 txdata['prevout_scripts'] = []
                 for i in range(wally.tx_get_num_inputs(tx)):
                     inp = wally.tx_get_input_script(tx, i)
-                    ga_signature = wally.hex_from_bytes(inp[2:inp[1]+2])
-                    redeem_script = wally.hex_from_bytes(inp[-71:])
+                    ga_signature = b2h(inp[2:inp[1]+2])
+                    redeem_script = b2h(inp[-71:])
                     txdata['prevout_signatures'].append(ga_signature)
                     txdata['prevout_scripts'].append(redeem_script)
                     txdata['prevout_script_types'].append(gaconstants.P2SH_FORTIFIED_OUT)
@@ -71,7 +71,7 @@ class TwoOfTwo:
         def get_pubkey_for_pointer_hex(xpub):
             """Return hex encoded public key derived from xpub for pointer"""
             xpub = gacommon.derive_hd_key(xpub, [pointer], wally.BIP32_FLAG_KEY_PUBLIC)
-            return wally.hex_from_bytes(wally.bip32_key_get_pub_key(xpub))
+            return b2h(wally.bip32_key_get_pub_key(xpub))
 
         def get_pubkeys_hex(fn, keys_material, network):
             """Return a list of hex-encoded public key given either a seed or a mnemonic"""
