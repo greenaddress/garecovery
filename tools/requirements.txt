@@ -1,8 +1,8 @@
 argcomplete==1.8.2 --hash=sha256:c2a0a88492c31a42dde41636fbd4c406cde78fe7fb938ab511b733bff6358782
 python-bitcoinrpc==1.0 --hash=sha256:a6a6f35672635163bc491c25fe29520bdd063dedbeda3b37bf5be97aa038c6e7
 
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.9/wallycore-0.7.9-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:7b83e33630330ce7579af58d675429c744557b4e8f13af2fc164af827aba7dbd
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.9/wallycore-0.7.9-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:f5e82cc5b4affcce354da493e2076cc007fd4ac7c7dd3f6970cde4deebf2c179
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.9/wallycore-0.7.9-cp37-cp37m-macosx_10_14_x86_64.whl; sys_platform == 'darwin' and python_version == '3.7' --hash=sha256:667d7a1b6eb7bd068fc819645bfab9df4c7760f83469012d15ecf168dd435a36
-https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.9/wallycore-0.7.9-cp36-cp36m-win_amd64.whl; sys_platform == 'win32' and python_version == '3.6' --hash=sha256:30343164d146be1011e665245f66e55dfd8f82caa57e2cff130951cb380835cc
-https://github.com/ElementsProject/libwally-core/archive/release_0.7.9.tar.gz --hash=sha256:339ac53546f0372f11c186d4d8e06a894fc3102a89ec11180d5e7bdd5ff34eab
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.8.0/wallycore-0.8.0-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:95809c3ef620317a9e3826600189f164dd69abe9c61b52a35e655e22396cc56f
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.8.0/wallycore-0.8.0-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:f287bb7c15155dac6ba866744fccdf3855e648c1b4366cbd67a75a7e353f567f
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.8.0/wallycore-0.8.0-cp37-cp37m-macosx_10_14_x86_64.whl; sys_platform == 'darwin' and python_version == '3.7' --hash=sha256:6687bd503908f5f4a7052f622b03881c5217ae9c2810f5d28284eb22cdcbde22
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.8.0/wallycore-0.8.0-cp36-cp36m-win_amd64.whl; sys_platform == 'win32' and python_version == '3.6' --hash=sha256:169d18dab1302c566fc6b9a35725db974a538472be2df69c5c4ff7796fd51d4e
+https://github.com/ElementsProject/libwally-core/archive/release_0.8.0.tar.gz --hash=sha256:a52b9cd46a7acc5031d8f1deb49bd51525966e38c5dc5544412e841593608ba6
