@@ -35,16 +35,21 @@ should be followed.
 The recovery tool supports recovering from both types of subaccounts.
 
 ## 2of2 Recovery
-Coins held in 2of2 accounts need to be signed by both you and Blockstream
-Green (also known with the previous name Greenaddress).
-At the moment, provided you have nLocktime emails enabled in your settings, the
-service automatically generates special "nLockTime" transactions, pre-signed by
-Blockstream Green but not spendable until some time in the future (the
-nLockTime).
-To recover these coins, refer to the 'nLocktime' section.
-In the future, thanks to a new type of script (CSV) the coins will be spendable
-by your keys only after a chosen amount of blocks has passed.
-To recover these coins, refer to the 'CSV (Check Sequence Verify)' section.
+Coins received into your Blockstream Green wallet after January 25 2021 are
+recoverable after a configurable period without the Green server and without
+requiring an nlocktimes.zip file. The default 2FA expiry period is 360 days and
+can be changed in your wallet settings. To recover these coins refer to the
+[`CSV (Check Sequence Verify)` 
+section](https://github.com/greenaddress/garecovery#csv-check-sequence-verify).
+
+All funds received in 2of2 accounts prior to January 25 2021 need to be signed
+by both you and Blockstream Green (also known with the previous name Greenaddress).
+In order to recover such older coins you need to have nLocktime emails enabled in
+your settings. The service automatically generates special "nLockTime" transactions,
+pre-signed by Blockstream Green but not spendable until some time in the future (the
+nLockTime). To recover these coins, refer to the [`nLocktime` 
+section](https://github.com/greenaddress/garecovery#nlocktime).
+
 Note that, in some cases, it may be needed to follow both procedures to recover
 all coins.
 
