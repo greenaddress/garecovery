@@ -112,10 +112,27 @@ class TwoOfTwo:
         key = gacommon.derive_user_private_key(txdata, self.wallet, branch=4)
         return gacommon.private_key_to_wif(key, clargs.args.network)
 
+    def _check_private_key_can_spend_output(self, tx, private_key_wif):
+        wif_version = {
+            'mainnet': wally.WALLY_ADDRESS_VERSION_WIF_MAINNET,
+            'testnet': wally.WALLY_ADDRESS_VERSION_WIF_TESTNET,
+        }
+        pubkey = wally.wif_to_public_key(private_key_wif, wif_version[clargs.args.network])
+        spk_from_key = wally.scriptpubkey_p2pkh_from_bytes(pubkey, wally.WALLY_SCRIPT_HASH160)
+        assert wally.tx_get_num_outputs(tx) == 1
+        spk_from_tx = wally.tx_get_output_script(tx, 0)
+        if spk_from_key != spk_from_tx:
+            logging.error(';'.join(
+                f'pointers:{t["prevout_pointers"]},subaccounts:{t["prevout_subaccounts"]},'
+                for t in self.txdata))
+            msg = 'The nlockime file contains inconsistent information, please contact support.'
+            raise exceptions.GARecoveryError(msg)
+
     def get_transactions(self):
         txs = []
         for txdata in self.txdata:
             tx = self._get_signed_tx(txdata)
             private_key_wif = self._get_private_key_wif(txdata)
+            self._check_private_key_can_spend_output(tx, private_key_wif)
             txs.append((tx, private_key_wif))
         return txs
