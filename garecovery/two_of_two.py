@@ -108,31 +108,31 @@ class TwoOfTwo:
         key = gacommon.derive_user_private_key(txdata, self.wallet, branch=1)
         return gacommon.countersign(txdata, key)
 
-    def _get_private_key_wif(self, txdata):
-        key = gacommon.derive_user_private_key(txdata, self.wallet, branch=4)
-        return gacommon.private_key_to_wif(key, clargs.args.network)
+    def _get_private_key_wif(self, txdata, tx):
+        # Newly created nlocktime files use branch 4, but some old ones may
+        # have used branch 1, attempt both before failing.
+        for branch in [4, 1]:
+            key = gacommon.derive_user_private_key(txdata, self.wallet, branch)
+            if self._private_key_can_spend_output(tx, key):
+                return gacommon.private_key_to_wif(key, clargs.args.network)
 
-    def _check_private_key_can_spend_output(self, tx, private_key_wif):
-        wif_version = {
-            'mainnet': wally.WALLY_ADDRESS_VERSION_WIF_MAINNET,
-            'testnet': wally.WALLY_ADDRESS_VERSION_WIF_TESTNET,
-        }
-        pubkey = wally.wif_to_public_key(private_key_wif, wif_version[clargs.args.network])
+        logging.error(';'.join(
+            f'pointers:{t["prevout_pointers"]},subaccounts:{t["prevout_subaccounts"]},'
+            for t in txdata))
+        msg = 'The nlockime file contains inconsistent information, please contact support.'
+        raise exceptions.GARecoveryError(msg)
+
+    def _private_key_can_spend_output(self, tx, private_key):
+        pubkey = wally.bip32_key_get_pub_key(private_key)
         spk_from_key = wally.scriptpubkey_p2pkh_from_bytes(pubkey, wally.WALLY_SCRIPT_HASH160)
         assert wally.tx_get_num_outputs(tx) == 1
         spk_from_tx = wally.tx_get_output_script(tx, 0)
-        if spk_from_key != spk_from_tx:
-            logging.error(';'.join(
-                f'pointers:{t["prevout_pointers"]},subaccounts:{t["prevout_subaccounts"]},'
-                for t in self.txdata))
-            msg = 'The nlockime file contains inconsistent information, please contact support.'
-            raise exceptions.GARecoveryError(msg)
+        return spk_from_key == spk_from_tx
 
     def get_transactions(self):
         txs = []
         for txdata in self.txdata:
             tx = self._get_signed_tx(txdata)
-            private_key_wif = self._get_private_key_wif(txdata)
-            self._check_private_key_can_spend_output(tx, private_key_wif)
+            private_key_wif = self._get_private_key_wif(txdata, tx)
             txs.append((tx, private_key_wif))
         return txs
