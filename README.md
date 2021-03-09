@@ -87,14 +87,14 @@ Here you can see the file contains a transaction worth 830673.85 bits, with
 locktime = 1139186. The locktime indicates the block number that the bitcoin
 blockchain must reach before the coins are available for recovery. You can
 find the current block number (also known as the block height) using your local
-full node or many available online tools, for example https://blockexplorer.com
+full node or many available online tools, for example https://blockstream.info
 
 Once the transactions are spendable they can be broadcast onto the network. The
 raw transactions are in the csv file, along with the private key for the
 address they send their coins to. You can broadcast these raw transactions
 using your full node via RPC or online tools such as:
 
-https://blockexplorer.com/tx/send  
+https://blockstream.info/tx/push
 https://www.smartbit.com.au/txs/pushtx
 
 ### CSV (Check Sequence Verify)
