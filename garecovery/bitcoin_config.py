@@ -1,13 +1,7 @@
 import io
 import os
 import logging
-
-try:
-    # Python2
-    import ConfigParser as configparser
-except ImportError:
-    # Python3
-    import configparser
+import configparser
 
 
 DEFAULT_CONFIG_FILENAME = {
