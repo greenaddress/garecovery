@@ -135,13 +135,14 @@ def test_core_daemon_not_available():
     rpcpassword = 'rpcpassword__'
     rpcconnect = 'rpcconnect__'
     rpcport = 'rpcport__'
+    rpcwallet = ''
     rpctimeout = 123
 
     def no_core(connstr, http_auth_header, timeout):
         # Check that the connection string is formed correctly from
         # the passed args, but then refuse to connect
         # The x.y is part of a workaround for authentication via python-bitcoinrpc
-        assert connstr == "http://x:y@{}:{}".format(rpcconnect, rpcport)
+        assert connstr == "http://x:y@{}:{}/wallet/{}".format(rpcconnect, rpcport, rpcwallet)
         assert timeout == rpctimeout*60
         raise socket.error('[Errno 111] Connection refused')
 
@@ -153,6 +154,7 @@ def test_core_daemon_not_available():
             '--rpcpassword={}'.format(rpcpassword),
             '--rpcconnect={}'.format(rpcconnect),
             '--rpcport={}'.format(rpcport),
+            '--rpcwallet={}'.format(rpcwallet),
             '--rpc-timeout-minutes={}'.format(rpctimeout),
             '2of3',
             '--network=testnet',

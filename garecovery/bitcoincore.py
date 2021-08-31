@@ -93,13 +93,14 @@ class Connection:
 
     def __init__(self, args):
         # Read from rpc params from config file
-        keys = ['rpcuser', 'rpcpassword', 'rpcconnect', 'rpcport', 'rpccookiefile']
+        keys = ['rpcuser', 'rpcpassword', 'rpcconnect', 'rpcport', 'rpccookiefile', 'rpcwallet']
         config = Connection.read_config(keys, args)
 
         # Override with command line options
         for key in keys:
             override = getattr(args, key, None)
-            if override:
+            if override is not None:
+                # empty string is a valid rpcwallet value
                 config[key] = override
         logging.debug('config: {}'.format(config))
 
@@ -120,6 +121,7 @@ class Connection:
                 http_auth_header = Connection.get_http_auth_header(config, args.network)
                 hostname = config['rpcconnect']
                 port = config['rpcport']
+                wallet = config.get('rpcwallet')
             except KeyError as e:
                 raise exceptions.BitcoinCoreConnectionError(MISSING_RPC_PARAM.format(e))
 
@@ -128,6 +130,8 @@ class Connection:
             # Passing x:y@ here as a hack because the authentication header is going to
             # be replaced anyway
             connstr = "http://x:y@{}:{}".format(hostname, port)
+            if wallet is not None:
+                connstr += f'/wallet/{wallet}'
             timeout = 60 * args.rpc_timeout_minutes
             self.rpc = AuthServiceProxy(connstr, http_auth_header, timeout=timeout)
             logging.info('HTTP timeout set to {}s'.format(timeout))

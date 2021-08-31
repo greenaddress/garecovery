@@ -104,6 +104,9 @@ def get_args(argv, is_liquid=False):
         '--rpcport',
         dest='rpcport')
     rpc.add_argument(
+        '--rpcwallet',
+        dest='rpcwallet'),
+    rpc.add_argument(
         '--config-filename',
         dest='config_filename')
     rpc.add_argument(
