@@ -56,7 +56,13 @@ class Connection:
     @staticmethod
     def read_config(keys, options):
         config = bitcoin_config.Config(options.config_filename, gacommon.is_liquid(options.network))
-        return {key: config.get_val(key) for key in keys}
+        section = {
+            'mainnet': 'main',
+            'testnet': 'test',
+            'liquid': 'liquidv1',
+            'localtest-liquid': 'liquidregtest',  # this may vary though
+        }[options.network]
+        return {key: config.get_val(section, key) for key in keys}
 
     @staticmethod
     def get_http_auth_header(config, network):

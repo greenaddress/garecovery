@@ -28,12 +28,22 @@ class Config:
                 content = u'[{}]'.format(DUMMY_SECTION) + config_file.read()
                 self.config.readfp(io.StringIO(content))
 
+            for key in self.config.options(DUMMY_SECTION):
+                key_split = key.split('.')
+                if len(key_split) == 2:
+                    # Move prefixed entries to their sections
+                    prefix, actual_key = key_split
+                    self.config[prefix][actual_key] = self.config[DUMMY_SECTION].pop(key)
+                else:
+                    # Set unprefixed entries as default values
+                    self.config['DEFAULT'][key] = self.config[DUMMY_SECTION].pop(key)
+
         except IOError:
             logging.debug('Failed to open bitcoin config file {}'.format(config_filename))
 
-    def get_val(self, key):
-        if self.config.has_option('{}'.format(DUMMY_SECTION), key):
-            val = self.config.get('{}'.format(DUMMY_SECTION), key)
+    def get_val(self, section, key):
+        if self.config.has_option(section, key):
+            val = self.config.get(section, key)
             logging.debug('Read {} from config: {}'.format(key, val))
             return val
         else:
