@@ -12,6 +12,7 @@ def get_bip32_pubkey(chaincode, key, network):
         'testnet': wally.BIP32_VER_TEST_PUBLIC,
         'mainnet': wally.BIP32_VER_MAIN_PUBLIC,
         'liquid': wally.BIP32_VER_MAIN_PUBLIC,
+        'testnet-liquid': wally.BIP32_VER_TEST_PUBLIC,
         'localtest-liquid': wally.BIP32_VER_TEST_PUBLIC,
     }[network]
     public_key = key

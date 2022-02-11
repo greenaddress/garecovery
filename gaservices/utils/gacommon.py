@@ -125,4 +125,4 @@ def derive_user_private_key(txdata, wallet, branch):
 
 
 def is_liquid(network):
-    return network in ['liquid', 'localtest-liquid']
+    return network in ['liquid', 'testnet-liquid', 'localtest-liquid']

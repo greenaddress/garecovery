@@ -60,6 +60,7 @@ class Connection:
             'mainnet': 'main',
             'testnet': 'test',
             'liquid': 'liquidv1',
+            'testnet-liquid': 'liquidtestnet',
             'localtest-liquid': 'liquidregtest',  # this may vary though
         }[options.network]
         return {key: config.get_val(section, key) for key in keys}
@@ -83,6 +84,7 @@ class Connection:
                     'testnet': '~/.bitcoin/testnet3/.cookie',
                     'mainnet': '~/.bitcoin/.cookie',
                     'liquid': '~/.elements/liquidv1/.cookie',
+                    'testnet-liquid': '~/.elements/liquidv1test/.cookie',
                     'localtest-liquid': '~/.elements/elementsregtest/.cookie',
                 }
                 rpccookiefile = os.path.expanduser(default_rpc_cookies[network])
@@ -116,12 +118,14 @@ class Connection:
                 'testnet': 18332,
                 'mainnet': 8332,
                 'liquid': 7041,
+                'testnet-liquid': 7040,
                 'localtest-liquid': 7040,
             }
             config['rpcport'] = default_rpc_ports[args.network]
             logging.info('Defaulting rpc port to {}'.format(config['rpcport']))
 
         # connect to core
+        connstr = "- getting connection variables"  # value in case exception thrown early
         try:
             try:
                 http_auth_header = Connection.get_http_auth_header(config, args.network)

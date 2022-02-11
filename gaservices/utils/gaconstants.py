@@ -16,7 +16,7 @@ HARDENED = 0x80000000
 
 SUPPORTED_NETWORKS = {
     False: ['mainnet', 'testnet'],
-    True: ['liquid', 'localtest-liquid']
+    True: ['liquid', 'testnet-liquid', 'localtest-liquid']
 }
 
 P2PKH_MAINNET = wally.WALLY_ADDRESS_VERSION_P2PKH_MAINNET
@@ -28,26 +28,33 @@ P2SH_TESTNET = wally.WALLY_ADDRESS_VERSION_P2SH_TESTNET
 P2PKH_LIQUID = wally.WALLY_ADDRESS_VERSION_P2PKH_LIQUID
 P2SH_LIQUID = wally.WALLY_ADDRESS_VERSION_P2SH_LIQUID
 
+P2PKH_LIQUID_TESTNET = wally.WALLY_ADDRESS_VERSION_P2PKH_LIQUID_TESTNET
+P2SH_LIQUID_TESTNET = wally.WALLY_ADDRESS_VERSION_P2SH_LIQUID_TESTNET
+
 P2PKH_LIQUID_REGTEST = wally.WALLY_ADDRESS_VERSION_P2PKH_LIQUID_REGTEST
 P2SH_LIQUID_REGTEST = wally.WALLY_ADDRESS_VERSION_P2SH_LIQUID_REGTEST
 
 ADDR_VERSIONS_MAINNET = [P2PKH_MAINNET, P2SH_MAINNET]
 ADDR_VERSIONS_TESTNET = [P2PKH_TESTNET, P2SH_TESTNET]
 ADDR_VERSIONS_LIQUID = [P2PKH_LIQUID, P2SH_LIQUID]
+ADDR_VERSIONS_LIQUID_TESTNET = [P2PKH_LIQUID_TESTNET, P2SH_LIQUID_TESTNET]
 ADDR_VERSIONS_LIQUID_REGTEST = [P2PKH_LIQUID_REGTEST, P2SH_LIQUID_REGTEST]
 
 ADDR_FAMILY_MAINNET = 'bc'
 ADDR_FAMILY_TESTNET = 'tb'
 ADDR_FAMILY_LIQUID = 'lq'
+ADDR_FAMILY_LIQUID_TESTNET = 'tlq'
 ADDR_FAMILY_LIQUID_REGTEST = 'el'
 
 CA_PREFIX = {
     'liquid': wally.WALLY_CA_PREFIX_LIQUID,
     'localtest-liquid': wally.WALLY_CA_PREFIX_LIQUID_REGTEST,
+    'testnet-liquid': wally.WALLY_CA_PREFIX_LIQUID_TESTNET,
 }
 
 CSV_BUCKETS = {
     'liquid': [65535],
+    'testnet-liquid': [1440, 65535],
     'localtest-liquid': [144, 1440, 65535],  # 144 for testing purposes
     'testnet': [144, 4320, 51840],
     'mainnet': [25920, 51840, 65535],
@@ -69,6 +76,7 @@ def get_address_versions(network):
         'testnet': ADDR_VERSIONS_TESTNET,
         'mainnet': ADDR_VERSIONS_MAINNET,
         'liquid': ADDR_VERSIONS_LIQUID,
+        'testnet-liquid': ADDR_VERSIONS_LIQUID_TESTNET,
         'localtest-liquid': ADDR_VERSIONS_LIQUID_REGTEST,
     }[network]
 
@@ -77,6 +85,7 @@ def get_address_family(network):
         'testnet': ADDR_FAMILY_TESTNET,
         'mainnet': ADDR_FAMILY_MAINNET,
         'liquid': ADDR_FAMILY_LIQUID,
+        'testnet-liquid': ADDR_FAMILY_LIQUID_TESTNET,
         'localtest-liquid': ADDR_FAMILY_LIQUID_REGTEST,
     }[network]
 
@@ -101,6 +110,11 @@ GA_KEY_DATA_LIQUID = {
     'pubkey': '02c408c3bb8a3d526103fb93246f54897bdd997904d3e18295b49a26965cb41b7f'
 }
 
+GA_KEY_DATA_LIQUID_TESTNET = {
+    'chaincode': 'c660eec6d9c536f4121854146da22e02d4c91d72af004d41729b9a592f0788e5',
+    'pubkey': '02c47d84a5b256ee3c29df89642d14b6ed73d17a2b8af0aca18f6f1900f1633533'
+}
+
 GA_KEY_DATA_LIQUID_REGTEST = GA_KEY_DATA_TESTNET
 
 def get_ga_key_data(network):
@@ -108,5 +122,6 @@ def get_ga_key_data(network):
         'testnet': GA_KEY_DATA_TESTNET,
         'mainnet': GA_KEY_DATA_MAINNET,
         'liquid': GA_KEY_DATA_LIQUID,
+        'testnet-liquid': GA_KEY_DATA_LIQUID_TESTNET,
         'localtest-liquid': GA_KEY_DATA_LIQUID_REGTEST,
     }[network]
