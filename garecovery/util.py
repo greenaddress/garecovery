@@ -95,7 +95,7 @@ def scriptpubkey_from_address(address):
     if is_base58_address:
         if decoded[0] in (gaconstants.P2PKH_TESTNET, gaconstants.P2PKH_MAINNET):
             return wally.scriptpubkey_p2pkh_from_bytes(decoded[1:], 0)
-        elif decoded[0] in(gaconstants.P2SH_TESTNET, gaconstants.P2SH_MAINNET):
+        elif decoded[0] in (gaconstants.P2SH_TESTNET, gaconstants.P2SH_MAINNET):
             return wally.scriptpubkey_p2sh_from_bytes(decoded[1:], 0)
     is_segwit_address, decoded = decode_segwit_address(address)
     if is_segwit_address:
