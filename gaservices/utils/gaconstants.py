@@ -39,7 +39,7 @@ ADDR_VERSIONS_LIQUID_REGTEST = [P2PKH_LIQUID_REGTEST, P2SH_LIQUID_REGTEST]
 ADDR_FAMILY_MAINNET = 'bc'
 ADDR_FAMILY_TESTNET = 'tb'
 ADDR_FAMILY_LIQUID = 'lq'
-ADDR_FAMILY_LIQUID_REGTEST = 'tb'
+ADDR_FAMILY_LIQUID_REGTEST = 'el'
 
 CA_PREFIX = {
     'liquid': wally.WALLY_CA_PREFIX_LIQUID,
@@ -48,7 +48,7 @@ CA_PREFIX = {
 
 CSV_BUCKETS = {
     'liquid': [65535],
-    'localtest-liquid': [144, 4320, 25920, 51840, 65535],
+    'localtest-liquid': [144, 1440, 65535],  # 144 for testing purposes
     'testnet': [144, 4320, 51840],
     'mainnet': [25920, 51840, 65535],
 }
