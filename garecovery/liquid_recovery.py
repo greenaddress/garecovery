@@ -18,10 +18,9 @@ import wallycore as wally
 
 class LiquidRecovery(object):
 
-    def __init__(self, mnemonic):
-        self.mnemonic = mnemonic
-        self.seed, _ = seed_from_mnemonic(mnemonic)
-        self.master_xprv = Bip32Key.from_mnemonic(mnemonic)
+    def __init__(self, seed):
+        self.seed = seed
+        self.master_xprv = Bip32Key.from_seed(seed)
         # only 1st one as Liquid does not need to be backward compatible
         self.gait_path = gait_paths_from_seed(self.seed, latest_only=True)
 

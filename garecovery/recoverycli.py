@@ -50,7 +50,8 @@ def get_recovery(options, mnemonic, seed):
     """Return an instance of either TwoOfTwo, TwoOfThree or LiquidRecovery, depending on options"""
     if options.recovery_mode == 'csv':
         if is_liquid(options.network):
-            return LiquidRecovery(mnemonic)
+            # Liquid does not need mnemonic, as gait path always from seed
+            return LiquidRecovery(seed)
         raise exceptions.InvalidNetwork(
             'recovery method {} is not available for this network'.format(options.recovery_mode))
     elif options.recovery_mode == '2of3':
@@ -77,7 +78,6 @@ def main(argv=None, is_liquid=False):
 
     clargs.set_args(argv or sys.argv, is_liquid)
     logging.basicConfig(level=clargs.args.loglevel)
-
     try:
         # Open the csv output file before doing anything else in case it fails
         # Do not overwrite the output file if it already exists
