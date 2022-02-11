@@ -139,6 +139,17 @@ def get_args(argv, is_liquid=False):
                 'blockchain.',
     }
 
+    passphrase = parser.add_mutually_exclusive_group(required=False)
+    passphrase.add_argument(
+        '--passphrase-file',
+        dest='passphrase_file',
+        help="Name of file containing any bip39 passphrase (if passing mnemonic words)")
+    passphrase.add_argument(
+        '--prompt-passphrase',
+        dest='prompt_passphrase',
+        action='store_true',
+        help="Prompt for console entry of bip39 passphrase")
+
     if is_liquid:
         csv = parser.add_argument_group('CSV options')
         csv.add_argument('--search-subaccounts', **kwargs_option_search_subaccounts)

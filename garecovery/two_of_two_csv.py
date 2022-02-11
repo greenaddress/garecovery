@@ -18,6 +18,11 @@ from gaservices.utils.gaconstants import CSV_BUCKETS, DUST_SATOSHI, EMPTY_TX_SIZ
 
 class TwoOfTwoCSV(object):
 
+    # This call accepts (optional) mnemonic but does not include any bip39 passphrase.
+    # The mnemonic is only used to derive a potential gait path for legacy wallets,
+    # and at that time we did not support bip39 passphrase, so any wallets that have
+    # a gait path derived from mnemonic would not have a passphrase.
+    # See also: gait_path_from_mnemonic()
     def __init__(self, mnemonic, seed):
         self.master_xprv = Bip32Key.from_seed(seed)
         self.gait_paths = gait_paths_from_seed(seed)

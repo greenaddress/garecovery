@@ -54,8 +54,15 @@ def get_gait_path(path_input):
             path[i * 2:(i + 1) * 2])[0] for i in range(len(path) // 2)]
 
 
+# This function does not include any bip39 passphrase - but that is ok as deriving gait-path from
+# mnemonic is legacy, and at that time we did not support bip39 passphrase, so any wallets that have
+# a gait path derived from mnemonic would not have a passphrase.
+# See also: xpubs_from_mnemonic()
 def gait_path_from_mnemonic(mnemonic):
-    """Get the standard path for deriving the GreenAddress xpub from the mnemonic"""
+    """Get the standard path for deriving the GreenAddress xpub from the mnemonic
+
+    NOTE: this function does not include support for bip39 passphrase
+    """
     GA_PATH = bytearray('greenaddress_path', 'ascii')
     derived512 = wally.pbkdf2_hmac_sha512(bytearray(mnemonic, "ascii"), GA_PATH, 0, 2048)
     return get_gait_path(derived512)
@@ -97,8 +104,15 @@ def gait_paths_from_seed(seed, latest_only=False):
     return [get_gait_path(path_input) for path_input in [path_input, path_input_hex, path_input_m]]
 
 
+# This function does not include any bip39 passphrase - but that is ok as deriving gait-path from
+# mnemonic is legacy, and at that time we did not support bip39 passphrase, so any wallets that have
+# a gait path derived from mnemonic would not have a passphrase.
+# See also: gait_path_from_mnemonic()
 def xpubs_from_mnemonic(mnemonic, subaccount, network):
-    """Derive GreenAddress xpubs from a mnemonic"""
+    """Derive GreenAddress xpubs from a mnemonic
+
+    NOTE: this function does not include support for bip39 passphrase
+    """
     gait_path = gait_path_from_mnemonic(mnemonic)
     return [derive_ga_xpub(gait_path, subaccount, network)]
 

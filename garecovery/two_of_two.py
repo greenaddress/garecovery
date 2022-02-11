@@ -12,6 +12,11 @@ from . import ga_xpub
 
 class TwoOfTwo:
 
+    # This call accepts (optional) mnemonic but does not include any bip39 passphrase.
+    # The mnemonic is only used to derive a potential gait path for legacy wallets,
+    # and at that time we did not support bip39 passphrase, so any wallets that have
+    # a gait path derived from mnemonic would not have a passphrase.
+    # See also: gait_path_from_mnemonic()
     def __init__(self, mnemonic, seed, nlocktime_file):
         logging.info('Reading nlocktime transactions from {}'.format(nlocktime_file))
         self.compressed_zip = open(nlocktime_file, "rb").read()

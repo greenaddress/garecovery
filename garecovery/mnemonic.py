@@ -7,7 +7,7 @@ wordlist_ = wally.bip39_get_wordlist('en')
 wordlist = [wally.bip39_get_word(wordlist_, i) for i in range(2048)]
 
 
-def seed_from_mnemonic(mnemonic_or_hex_seed):
+def seed_from_mnemonic(mnemonic_or_hex_seed, passphrase):
     """Return seed, mnemonic given an input string
 
     mnemonic_or_hex_seed can either be:
@@ -18,19 +18,22 @@ def seed_from_mnemonic(mnemonic_or_hex_seed):
     """
     if mnemonic_or_hex_seed.endswith('X'):
         mnemonic = None
+        if passphrase:
+            raise exceptions.InvalidMnemonicOrPasswordError(
+                'Passphrase is incompatible with explicit seed')
         seed = h2b(mnemonic_or_hex_seed[:-1])
     else:
         mnemonic = mnemonic_or_hex_seed
-        written, seed = wally.bip39_mnemonic_to_seed512(mnemonic_or_hex_seed, None)
+        written, seed = wally.bip39_mnemonic_to_seed512(mnemonic_or_hex_seed, passphrase)
         assert written == wally.BIP39_SEED_LEN_512
 
     assert len(seed) == wally.BIP39_SEED_LEN_512
     return seed, mnemonic
 
 
-def wallet_from_mnemonic(mnemonic_or_hex_seed, ver=wally.BIP32_VER_MAIN_PRIVATE):
+def wallet_from_mnemonic(mnemonic_or_hex_seed, passphrase, ver=wally.BIP32_VER_MAIN_PRIVATE):
     """Generate a BIP32 HD Master Key (wallet) from a mnemonic phrase or a hex seed"""
-    seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed)
+    seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed, passphrase)
     return wally.bip32_key_from_seed(seed, ver, wally.BIP32_FLAG_SKIP_HASH)
 
 

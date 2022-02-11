@@ -53,6 +53,31 @@ def test_recover_2of3(mock_bitcoincore):
     assert summary[0]['destination address'] == destination_address
 
 
+# FIXME: add passphrase tests for 2of2, csv, liquid
+@mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
+def test_recover_2of3_passphrase(mock_bitcoincore):
+    """Test 2of3 with mnemonic with passphrase"""
+    mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
+
+    estimate = {'blocks': 3, 'feerate': 0, }
+    mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
+
+    args = [
+        '--mnemonic-file={}'.format(datafile('mnemonic_hw_3.txt')),
+        '--passphrase-file={}'.format(datafile('passphrase_1.txt')),
+        '--rpcuser=abc',
+        '--rpcpassword=abc',
+        '2of3',
+        '--network=testnet',
+        '--recovery-mnemonic-file={}'.format(datafile('mnemonic_hw_4.txt')),
+        '--key-search-depth={}'.format(key_depth),
+        '--search-subaccounts={}'.format(sub_depth),
+        '--destination-address={}'.format(destination_address),
+    ]
+
+    assert get_output(args).strip() == open(datafile('signed_2of3_8')).read().strip()
+
+
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
 def test_set_nlocktime(mock_bitcoincore):
     """Test that newly created recovery transactions have nlocktime = current blockheight + 1"""

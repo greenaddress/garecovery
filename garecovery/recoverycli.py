@@ -42,10 +42,32 @@ def get_mnemonic(args, attr='mnemonic_file', prompt='mnemonic/hex seed: '):
     return mnemonic
 
 
+def get_passphrase(args, file_attr='passphrase_file', prompt_attr='prompt_passphrase',
+                   prompt='passphrase: '):
+    """Get a passphrase either from file or from the console"""
+
+    # strip any trailing newline character - but not whitespace in general (as
+    # a cunning passphrase may contain trailing space characters)
+    filename = getattr(args, file_attr)
+    passphrase = open(filename).read().rstrip(os.linesep) if filename else None
+    prompt_for_passphrase = getattr(args, prompt_attr)
+
+    if prompt_for_passphrase:
+        assert not passphrase
+        passphrase = user_input(prompt)
+
+    return passphrase
+
+
 def get_recovery_mnemonic(args):
     return get_mnemonic(args, 'recovery_mnemonic_file', 'recovery mnemonic/hex seed: ')
 
 
+# This call accepts (optional) mnemonic but does not include any bip39 passphrase.
+# The mnemonic is only used to derive a potential gait path for legacy wallets,
+# and at that time we did not support bip39 passphrase, so any wallets that have
+# a gait path derived from mnemonic would not have a passphrase.
+# See also: gait_path_from_mnemonic()
 def get_recovery(options, mnemonic, seed):
     """Return an instance of either TwoOfTwo, TwoOfThree or LiquidRecovery, depending on options"""
     if options.recovery_mode == 'csv':
@@ -57,8 +79,9 @@ def get_recovery(options, mnemonic, seed):
     elif options.recovery_mode == '2of3':
         backup_wallet = None
         if not options.custom_xprv:
+            # Note: passphrase does not apply to backup key
             recovery_mnemonic = get_recovery_mnemonic(options)
-            backup_wallet = wallet_from_mnemonic(recovery_mnemonic)
+            backup_wallet = wallet_from_mnemonic(recovery_mnemonic, passphrase=None)
 
         return TwoOfThree(mnemonic, seed, backup_wallet, options.custom_xprv)
     elif options.recovery_mode == '2of2':
@@ -86,7 +109,8 @@ def main(argv=None, is_liquid=False):
         with open(output_filename, "w") as ofile:
 
             mnemonic_or_hex_seed = get_mnemonic(clargs.args)
-            seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed)
+            passphrase = get_passphrase(clargs.args)
+            seed, mnemonic = seed_from_mnemonic(mnemonic_or_hex_seed, passphrase)
 
             recovery = get_recovery(clargs.args, mnemonic, seed)
 
