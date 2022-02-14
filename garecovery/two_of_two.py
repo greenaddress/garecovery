@@ -100,8 +100,8 @@ class TwoOfTwo:
         # if the xpub was derived from the variant of the gait path using the mnemonic but a
         # hex seed was provided instead of a mnemonic when running the recovery tool that the key
         # will not be found. In this case default to mainnet.
-        logging.warn("Unable to detect network. Defaulting to mainnet. Consider "
-                     "passing the full mnemonic rather than hex seed")
+        logging.warning("Unable to detect network. Defaulting to mainnet. Consider "
+                        "passing the full mnemonic rather than hex seed")
         return 'mainnet'
 
     def _get_signed_tx(self, txdata):

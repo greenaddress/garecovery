@@ -153,5 +153,5 @@ class Connection:
             logging.info('Connected - getnetworkinfo successful')
 
         except socket.error as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             raise exceptions.BitcoinCoreConnectionError(CORE_CONNECT_ERR.format(connstr))

@@ -329,7 +329,8 @@ class TwoOfThree(object):
         # 2) If ga_xpub is not given it's possible to iterate over the possible values of
         #    subaccount and build a larger search space. This is suboptimal
         if clargs.args.search_subaccounts:
-            logging.warn('No --ga-xpub specified, deriving and iterating over possible subaccounts')
+            logging.warning('No --ga-xpub specified, deriving and iterating over possible'
+                            ' subaccounts')
             keyset_factories = []
             for subaccount in range(*subaccounts):
                 xpubs = ga_xpub.xpubs_from_mnemonic(self.mnemonic, subaccount, clargs.args.network)
