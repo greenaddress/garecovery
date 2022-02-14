@@ -194,10 +194,16 @@ class UTXO:
 
 class TwoOfThree(object):
 
-    def __init__(self, mnemonic, wallet, backup_wallet, custom_xprv):
+    def __init__(self, mnemonic, seed, backup_wallet, custom_xprv):
         self.mnemonic = mnemonic
-        self.wallets = [wallet]
+        self.seed = seed
         self.custom_xprv = custom_xprv
+
+        # Passing BIP32_VER_MAIN_PRIVATE although it may be on TEST. It doesn't make any difference
+        # because they key is not going to be serialized
+        version = wally.BIP32_VER_MAIN_PRIVATE
+        wallet = wally.bip32_key_from_seed(seed, version, wally.BIP32_FLAG_SKIP_HASH)
+        self.wallets = [wallet]
 
         if backup_wallet:
             self.wallets.append(backup_wallet)
@@ -331,9 +337,18 @@ class TwoOfThree(object):
         if clargs.args.search_subaccounts:
             logging.warning('No --ga-xpub specified, deriving and iterating over possible'
                             ' subaccounts')
+
+            if self.mnemonic is None:
+                msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
+                raise exceptions.NeedMnemonicOrGaXPub(msg)
+
             keyset_factories = []
             for subaccount in range(*subaccounts):
-                xpubs = ga_xpub.xpubs_from_mnemonic(self.mnemonic, subaccount, clargs.args.network)
+                xpubs = ga_xpub.xpubs_from_seed(self.seed, subaccount, clargs.args.network)
+                if self.mnemonic:
+                    xpubs.extend(ga_xpub.xpubs_from_mnemonic(
+                            self.mnemonic, subaccount, clargs.args.network))
+
                 keyset_factories.extend([self._derived_keyset(xpub) for xpub in xpubs])
         else:
             assert clargs.args.ga_xpub

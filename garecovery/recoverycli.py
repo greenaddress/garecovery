@@ -55,17 +55,12 @@ def get_recovery(options, mnemonic, seed):
         raise exceptions.InvalidNetwork(
             'recovery method {} is not available for this network'.format(options.recovery_mode))
     elif options.recovery_mode == '2of3':
-        # Passing BIP32_VER_MAIN_PRIVATE although it may be on TEST. It doesn't make any difference
-        # because they key is not going to be serialized
-        version = wally.BIP32_VER_MAIN_PRIVATE
-        wallet = wally.bip32_key_from_seed(seed, version, wally.BIP32_FLAG_SKIP_HASH)
-
         backup_wallet = None
         if not options.custom_xprv:
             recovery_mnemonic = get_recovery_mnemonic(options)
             backup_wallet = wallet_from_mnemonic(recovery_mnemonic)
 
-        return TwoOfThree(mnemonic, wallet, backup_wallet, options.custom_xprv)
+        return TwoOfThree(mnemonic, seed, backup_wallet, options.custom_xprv)
     elif options.recovery_mode == '2of2':
         return TwoOfTwo(mnemonic, seed, options.nlocktime_file)
     else:

@@ -99,17 +99,8 @@ def gait_paths_from_seed(seed, latest_only=False):
 
 def xpubs_from_mnemonic(mnemonic, subaccount, network):
     """Derive GreenAddress xpubs from a mnemonic"""
-    if mnemonic is None:
-        msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
-        raise exceptions.NeedMnemonicOrGaXPub(msg)
     gait_path = gait_path_from_mnemonic(mnemonic)
-
-    # Include the new derivations for newer wallets and hardware mnemonics
-    written, seed = wally.bip39_mnemonic_to_seed512(mnemonic, None)
-    assert written == wally.BIP39_SEED_LEN_512
-
-    gait_paths = [gait_path] + gait_paths_from_seed(seed)
-    return [derive_ga_xpub(gait_path, subaccount, network) for gait_path in gait_paths]
+    return [derive_ga_xpub(gait_path, subaccount, network)]
 
 
 def xpubs_from_seed(seed, subaccount, network):
