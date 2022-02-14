@@ -111,17 +111,6 @@ class Bip32Key(object):
         extkey = wally.bip32_key_from_seed(seed, version, wally.BIP32_FLAG_SKIP_HASH)
         return cls(extkey)
 
-    @classmethod
-    def from_mnemonic(cls, mnemonic, is_testnet=False):
-        """Create a bip32 key from a bip39 english mnemonic"""
-        try:
-            wally.bip39_mnemonic_validate(None, mnemonic)
-        except ValueError:
-            raise ValueError('Invalid mnemonic')
-
-        _, seed = wally.bip39_mnemonic_to_seed512(mnemonic, None)
-        return cls.from_seed(seed, is_testnet)
-
     @property
     def xprv(self):
         return wally.bip32_key_to_base58(self.extkey, wally.BIP32_FLAG_KEY_PRIVATE)

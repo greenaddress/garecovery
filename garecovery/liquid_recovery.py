@@ -2,7 +2,6 @@ from garecovery.subaccount import Green2of2Subaccount
 from garecovery.key import Bip32Key
 from garecovery.utxo import SpendableElementsUTXO
 from garecovery.ga_xpub import gait_paths_from_seed
-from garecovery.mnemonic import seed_from_mnemonic
 from garecovery.exceptions import BitcoinCoreConnectionError, InsufficientFee, \
     MempoolRejectionError
 from garecovery.util import get_current_blockcount
