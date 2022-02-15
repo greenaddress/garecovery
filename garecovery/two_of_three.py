@@ -338,10 +338,6 @@ class TwoOfThree(object):
             logging.warning('No --ga-xpub specified, deriving and iterating over possible'
                             ' subaccounts')
 
-            if self.mnemonic is None:
-                msg = 'You must either pass --ga-xpub or a mnemonic (not hex seed)'
-                raise exceptions.NeedMnemonicOrGaXPub(msg)
-
             keyset_factories = []
             for subaccount in range(*subaccounts):
                 xpubs = ga_xpub.xpubs_from_seed(self.seed, subaccount, clargs.args.network)

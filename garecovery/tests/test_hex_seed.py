@@ -31,31 +31,30 @@ def test_hex_seed_login():
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
-def test_no_xpub_hex_seeds(mock_bitcoincore):
-    """If you do not provide a mnemonic (but a hex seed) you must provide xpub"""
+def test_hex_seeds(mock_bitcoincore):
+    """Test hex seeds for 2of3"""
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
 
-    estimate = {'blocks': 3, 'feerate': 1, }
+    estimate = {'blocks': 3, 'feerate': 0, }
     mock_bitcoincore.return_value.estimatesmartfee.return_value = estimate
 
     args = [
-        '--mnemonic-file={}'.format(datafile('hex_seed_8.txt')),
+        '--mnemonic-file={}'.format(datafile('hex_seed_hw_3.txt')),
         '--rpcuser=abc',
         '--rpcpassword=abc',
         '2of3',
         '--network=testnet',
-        '--recovery-mnemonic-file={}'.format(datafile('hex_seed_10.txt')),
+        '--recovery-mnemonic-file={}'.format(datafile('hex_seed_hw_4.txt')),
         '--key-search-depth={}'.format(key_depth),
         '--search-subaccounts={}'.format(sub_depth),
         '--destination-address={}'.format(destination_address),
     ]
 
-    output = get_output(args, True)
-    assert 'You must either pass --ga-xpub or a mnemonic' in output
+    assert get_output(args).strip() == open(datafile('signed_2of3_7')).read().strip()
 
 
 @mock.patch('garecovery.two_of_three.bitcoincore.AuthServiceProxy')
-def test_hex_seeds(mock_bitcoincore):
+def test_hex_seeds_with_xpub(mock_bitcoincore):
     """Test providing hex seeds instead of mnemonics"""
     mock_bitcoincore.return_value = AuthServiceProxy('testnet_txs')
 
