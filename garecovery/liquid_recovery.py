@@ -15,7 +15,7 @@ import logging
 import wallycore as wally
 
 
-class LiquidRecovery(object):
+class Liqugarecovery/bitcoin_config.pyidRecovery(object):
 
     def __init__(self, seed):
         self.seed = seed
