@@ -222,6 +222,12 @@ def get_args(argv, is_liquid=False):
             help='Ignore the mempool when scanning the UTXO set for 2of3 transactions. '
                  'This enables the use of scantxoutset which makes recovery much faster.')
 
+        action_gdk_path = advanced_2of3.add_argument(
+            '--gdk-path',
+            dest='gdk_path',
+            action='store_true',
+            help='Use the derivation path used in GDK until version 0.0.30.')
+
         two_of_two_csv = parser.add_argument_group('2of2 csv options')
 
         two_of_two_csv._group_actions = [
@@ -231,6 +237,7 @@ def get_args(argv, is_liquid=False):
             action_fee_blocks,
             action_default_feerate,
             action_scantxoutset,
+            action_gdk_path,
         ]
 
     argcomplete.autocomplete(parser)

@@ -28,8 +28,8 @@ def bip32_key_from_base58check(base58check):
     return wally.bip32_key_unserialize(raw)
 
 
-def derive_user_key(wallet, subaccount, branch=1):
-    subaccount_path = gacommon.get_subaccount_path(subaccount)
+def derive_user_key(wallet, subaccount, branch=1, gdk_path=False):
+    subaccount_path = [1, subaccount] if gdk_path else gacommon.get_subaccount_path(subaccount)
     return gacommon.derive_hd_key(wallet, subaccount_path + [branch])
 
 
@@ -63,7 +63,7 @@ class P2WSH(P2SH):
         return wally.witness_program_from_bytes(self.redeem_script, wally.WALLY_SCRIPT_SHA256)
 
 
-def createDerivedKeySet(ga_xpub, wallets, custom_xprv, network):
+def createDerivedKeySet(ga_xpub, wallets, custom_xprv, network, gdk_path=False):
     """Return class instances which represent sets of derived keys
 
     Given a user's key material call createDerivedKeySet to create a class
@@ -77,13 +77,15 @@ def createDerivedKeySet(ga_xpub, wallets, custom_xprv, network):
 
     # Given the subaccount the user keys can be derived. Optionally the user may provide a custom
     # extended private key as the backup
-    user_keys = [derive_user_key(wallet, subaccount) for wallet in wallets]
+    user_keys = [derive_user_key(wallets[0], subaccount)]
     if custom_xprv:
         logging.debug("Using custom xprv")
         root_xprv = bip32_key_from_base58check(custom_xprv)
         branch = 1
         xprv = gacommon.derive_hd_key(root_xprv, [branch], wally.BIP32_FLAG_KEY_PRIVATE)
         user_keys.append(xprv)
+    else:
+        user_keys.append(derive_user_key(wallets[1], subaccount, gdk_path=gdk_path))
     assert len(user_keys) == 2
 
     class DerivedKeySet:
@@ -329,7 +331,8 @@ class TwoOfThree(object):
 
     def _derived_keyset(self, ga_xpub):
         """Call createDerivedKeySet with ga_xpub"""
-        return createDerivedKeySet(ga_xpub, self.wallets, self.custom_xprv, clargs.args.network)
+        return createDerivedKeySet(
+            ga_xpub, self.wallets, self.custom_xprv, clargs.args.network, clargs.args.gdk_path)
 
     def get_keysets(self, subaccounts, pointers):
         """Return the keysets for a set of subaccounts/pointers"""
